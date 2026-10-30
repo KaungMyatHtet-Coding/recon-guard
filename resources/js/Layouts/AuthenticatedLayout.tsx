@@ -13,6 +13,7 @@ export default function Authenticated({
     const { auth, flash } = usePage<PageProps>().props;
     const user = auth.user;
     const userRole = user.roles?.[0] || 'customer';
+    const canAccessStudio = userRole === 'admin' || userRole === 'accountant';
 
     const [showingNavigationDropdown, setShowingNavigationDropdown] =
         useState(false);
@@ -67,6 +68,19 @@ export default function Authenticated({
                                 >
                                     Dashboard
                                 </NavLink>
+
+                                {canAccessStudio && (
+                                    <NavLink
+                                        href={route('simulation-studio.index')}
+                                        active={route().current('simulation-studio.*')}
+                                        className="text-slate-300 hover:text-white"
+                                    >
+                                        <span className="flex items-center gap-1.5">
+                                            <span className="h-2 w-2 rounded-full bg-indigo-400"></span>
+                                            Simulation & Dataset Studio
+                                        </span>
+                                    </NavLink>
+                                )}
                             </div>
                         </div>
 
@@ -183,6 +197,16 @@ export default function Authenticated({
                         >
                             Dashboard
                         </ResponsiveNavLink>
+
+                        {canAccessStudio && (
+                            <ResponsiveNavLink
+                                href={route('simulation-studio.index')}
+                                active={route().current('simulation-studio.*')}
+                                className="text-slate-200"
+                            >
+                                Simulation Studio
+                            </ResponsiveNavLink>
+                        )}
                     </div>
 
                     <div className="border-t border-slate-800 pb-1 pt-4">
