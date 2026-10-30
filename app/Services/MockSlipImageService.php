@@ -150,16 +150,24 @@ class MockSlipImageService
         $imageBytes = ob_get_clean();
         imagedestroy($im);
 
-        $filename = "slip_" . $channel . "_" . $mode . "_" . substr(md5(uniqid()), 0, 8) . ".png";
-
         $metadata = [
             'Software' => $isTampered ? 'Adobe Photoshop 25.0 (Windows)' : 'Mobile Wallet Native App v4.8.2',
             'Tampered' => $isTampered,
             'Mode' => $mode,
             'Channel' => $channel,
             'TransactionID' => $data['transaction_id'] ?? null,
+            'Amount' => (float) ($data['amount'] ?? 0),
+            'SenderPhone' => $data['sender_phone'] ?? null,
+            'SenderName' => $data['sender_name'] ?? null,
+            'InvoiceNumber' => $data['invoice_number'] ?? null,
+            'Datetime' => $data['datetime'] ?? date('Y-m-d H:i:s'),
             'GeneratedAt' => date('Y-m-d H:i:s'),
         ];
+
+        // Embed PNG tEXt metadata chunk into the PNG binary stream
+        $imageBytes = $this->embedPngTextChunk($imageBytes, 'ReconGuardMeta', json_encode($metadata));
+
+        $filename = "slip_" . $channel . "_" . $mode . "_" . substr(md5(uniqid()), 0, 8) . ".png";
 
         return [
             'image_bytes' => $imageBytes,
@@ -168,5 +176,28 @@ class MockSlipImageService
             'metadata' => $metadata,
             'image_hash' => hash('sha256', $imageBytes),
         ];
+    }
+
+    /**
+     * Embed a standard PNG tEXt chunk into a raw PNG binary stream before the IEND chunk.
+     */
+    protected function embedPngTextChunk(string $pngData, string $keyword, string $text): string
+    {
+        $iendPos = strrpos($pngData, 'IEND');
+        if ($iendPos === false) {
+            return $pngData;
+        }
+
+        // IEND chunk starts 4 bytes before 'IEND' (its length 0)
+        $insertPos = $iendPos - 4;
+
+        $chunkData = $keyword . "\0" . $text;
+        $chunkLength = pack('N', strlen($chunkData));
+        $chunkType = 'tEXt';
+        $crc = pack('N', crc32($chunkType . $chunkData));
+
+        $newChunk = $chunkLength . $chunkType . $chunkData . $crc;
+
+        return substr($pngData, 0, $insertPos) . $newChunk . substr($pngData, $insertPos);
     }
 }

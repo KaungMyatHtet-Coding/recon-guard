@@ -69,6 +69,14 @@ export default function Authenticated({
                                     Dashboard
                                 </NavLink>
 
+                                <NavLink
+                                    href={route('invoices.index')}
+                                    active={route().current('invoices.*')}
+                                    className="text-slate-300 hover:text-white"
+                                >
+                                    Invoices & Slips
+                                </NavLink>
+
                                 {canAccessStudio && (
                                     <NavLink
                                         href={route('simulation-studio.index')}
@@ -77,7 +85,7 @@ export default function Authenticated({
                                     >
                                         <span className="flex items-center gap-1.5">
                                             <span className="h-2 w-2 rounded-full bg-indigo-400"></span>
-                                            Simulation & Dataset Studio
+                                            Simulation Studio
                                         </span>
                                     </NavLink>
                                 )}
@@ -196,6 +204,14 @@ export default function Authenticated({
                             className="text-slate-200"
                         >
                             Dashboard
+                        </ResponsiveNavLink>
+
+                        <ResponsiveNavLink
+                            href={route('invoices.index')}
+                            active={route().current('invoices.*')}
+                            className="text-slate-200"
+                        >
+                            Invoices & Slips
                         </ResponsiveNavLink>
 
                         {canAccessStudio && (

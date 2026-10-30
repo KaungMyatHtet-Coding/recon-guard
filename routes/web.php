@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\InvoicePaymentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SimulationStudioController;
 use Illuminate\Foundation\Application;
@@ -19,6 +20,15 @@ Route::get('/', function () {
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
+
+// Phase 3: Invoices & Payment Slip Portal (All authenticated roles)
+Route::middleware(['auth', 'verified'])->prefix('invoices')->name('invoices.')->group(function () {
+    Route::get('/', [InvoicePaymentController::class, 'index'])->name('index');
+    Route::post('/', [InvoicePaymentController::class, 'store'])->name('store');
+    Route::get('/{invoice}', [InvoicePaymentController::class, 'show'])->name('show');
+    Route::post('/{invoice}/analyze-slip', [InvoicePaymentController::class, 'analyzeSlip'])->name('analyzeSlip');
+    Route::post('/{invoice}/submit-slip', [InvoicePaymentController::class, 'submitSlip'])->name('submitSlip');
+});
 
 // Phase 2: Simulation & Dataset Studio (Admin & Accountant only)
 Route::middleware(['auth', 'verified', 'role:admin|accountant'])->prefix('simulation-studio')->name('simulation-studio.')->group(function () {
