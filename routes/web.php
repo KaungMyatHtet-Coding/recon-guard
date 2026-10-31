@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BankStatementController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InvoicePaymentController;
 use App\Http\Controllers\ProfileController;
@@ -28,6 +29,14 @@ Route::middleware(['auth', 'verified'])->prefix('invoices')->name('invoices.')->
     Route::get('/{invoice}', [InvoicePaymentController::class, 'show'])->name('show');
     Route::post('/{invoice}/analyze-slip', [InvoicePaymentController::class, 'analyzeSlip'])->name('analyzeSlip');
     Route::post('/{invoice}/submit-slip', [InvoicePaymentController::class, 'submitSlip'])->name('submitSlip');
+});
+
+// Phase 4: Multi-Bank Statement CSV Ingestion & Ledger (Admin & Accountant only)
+Route::middleware(['auth', 'verified', 'role:admin|accountant'])->prefix('bank-statements')->name('bank-statements.')->group(function () {
+    Route::get('/', [BankStatementController::class, 'index'])->name('index');
+    Route::post('/upload', [BankStatementController::class, 'upload'])->name('upload');
+    Route::get('/{batch}', [BankStatementController::class, 'show'])->name('show');
+    Route::delete('/{batch}', [BankStatementController::class, 'destroy'])->name('destroy');
 });
 
 // Phase 2: Simulation & Dataset Studio (Admin & Accountant only)

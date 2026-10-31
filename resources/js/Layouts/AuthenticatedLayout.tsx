@@ -79,6 +79,16 @@ export default function Authenticated({
 
                                 {canAccessStudio && (
                                     <NavLink
+                                        href={route('bank-statements.index')}
+                                        active={route().current('bank-statements.*')}
+                                        className="text-slate-300 hover:text-white"
+                                    >
+                                        Bank Statements
+                                    </NavLink>
+                                )}
+
+                                {canAccessStudio && (
+                                    <NavLink
                                         href={route('simulation-studio.index')}
                                         active={route().current('simulation-studio.*')}
                                         className="text-slate-300 hover:text-white"
@@ -213,6 +223,16 @@ export default function Authenticated({
                         >
                             Invoices & Slips
                         </ResponsiveNavLink>
+
+                        {canAccessStudio && (
+                            <ResponsiveNavLink
+                                href={route('bank-statements.index')}
+                                active={route().current('bank-statements.*')}
+                                className="text-slate-200"
+                            >
+                                Bank Statements
+                            </ResponsiveNavLink>
+                        )}
 
                         {canAccessStudio && (
                             <ResponsiveNavLink
