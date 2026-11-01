@@ -89,6 +89,16 @@ export default function Authenticated({
 
                                 {canAccessStudio && (
                                     <NavLink
+                                        href={route('reconciliation.index')}
+                                        active={route().current('reconciliation.*')}
+                                        className="text-slate-300 hover:text-white"
+                                    >
+                                        3-Way Reconciliation
+                                    </NavLink>
+                                )}
+
+                                {canAccessStudio && (
+                                    <NavLink
                                         href={route('simulation-studio.index')}
                                         active={route().current('simulation-studio.*')}
                                         className="text-slate-300 hover:text-white"
@@ -231,6 +241,16 @@ export default function Authenticated({
                                 className="text-slate-200"
                             >
                                 Bank Statements
+                            </ResponsiveNavLink>
+                        )}
+
+                        {canAccessStudio && (
+                            <ResponsiveNavLink
+                                href={route('reconciliation.index')}
+                                active={route().current('reconciliation.*')}
+                                className="text-slate-200"
+                            >
+                                3-Way Reconciliation
                             </ResponsiveNavLink>
                         )}
 

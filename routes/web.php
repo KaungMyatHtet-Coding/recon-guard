@@ -4,6 +4,7 @@ use App\Http\Controllers\BankStatementController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InvoicePaymentController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ReconciliationController;
 use App\Http\Controllers\SimulationStudioController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -37,6 +38,14 @@ Route::middleware(['auth', 'verified', 'role:admin|accountant'])->prefix('bank-s
     Route::post('/upload', [BankStatementController::class, 'upload'])->name('upload');
     Route::get('/{batch}', [BankStatementController::class, 'show'])->name('show');
     Route::delete('/{batch}', [BankStatementController::class, 'destroy'])->name('destroy');
+});
+
+// Phase 5: 3-Way Automated Reconciliation Engine & Workbench (Admin & Accountant only)
+Route::middleware(['auth', 'verified', 'role:admin|accountant'])->prefix('reconciliation')->name('reconciliation.')->group(function () {
+    Route::get('/', [ReconciliationController::class, 'index'])->name('index');
+    Route::post('/run', [ReconciliationController::class, 'run'])->name('run');
+    Route::patch('/matches/{match}/approve', [ReconciliationController::class, 'approve'])->name('approve');
+    Route::patch('/matches/{match}/reject', [ReconciliationController::class, 'reject'])->name('reject');
 });
 
 // Phase 2: Simulation & Dataset Studio (Admin & Accountant only)
