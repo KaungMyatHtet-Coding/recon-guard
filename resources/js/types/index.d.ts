@@ -17,11 +17,23 @@ export interface FlashMessages {
     info?: string | null;
 }
 
+export interface AccountNotificationItem {
+    id: number;
+    user_id: number;
+    type: string;
+    title: string;
+    message: string;
+    read_at: string | null;
+    created_at: string;
+}
+
 export type PageProps<
     T extends Record<string, unknown> = Record<string, unknown>,
 > = T & {
     auth: {
         user: User;
     };
+    notifications?: AccountNotificationItem[];
+    unread_notifications_count?: number;
     flash?: FlashMessages;
 };

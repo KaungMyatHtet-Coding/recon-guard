@@ -1,11 +1,14 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\AuditReportController;
 use App\Http\Controllers\BankStatementController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InvoicePaymentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReconciliationController;
 use App\Http\Controllers\SimulationStudioController;
+use App\Http\Controllers\SupportAppealController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -28,8 +31,8 @@ Route::middleware(['auth', 'verified'])->prefix('invoices')->name('invoices.')->
     Route::get('/', [InvoicePaymentController::class, 'index'])->name('index');
     Route::post('/', [InvoicePaymentController::class, 'store'])->name('store');
     Route::get('/{invoice}', [InvoicePaymentController::class, 'show'])->name('show');
-    Route::post('/{invoice}/analyze-slip', [InvoicePaymentController::class, 'analyzeSlip'])->name('analyzeSlip');
-    Route::post('/{invoice}/submit-slip', [InvoicePaymentController::class, 'submitSlip'])->name('submitSlip');
+    Route::post('/{invoice}/analyze-slip', [InvoicePaymentController::class, 'analyzeSlip'])->middleware('not_blacklisted')->name('analyzeSlip');
+    Route::post('/{invoice}/submit-slip', [InvoicePaymentController::class, 'submitSlip'])->middleware('not_blacklisted')->name('submitSlip');
 });
 
 // Phase 4: Multi-Bank Statement CSV Ingestion & Ledger (Admin & Accountant only)
@@ -48,6 +51,25 @@ Route::middleware(['auth', 'verified', 'role:admin|accountant'])->prefix('reconc
     Route::patch('/matches/{match}/reject', [ReconciliationController::class, 'reject'])->name('reject');
 });
 
+// Phase 6: Chief Auditor Passcode Gate (Admin only)
+Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/gate', [AdminDashboardController::class, 'showGate'])->name('gate');
+    Route::post('/gate', [AdminDashboardController::class, 'verifyGate'])->name('gate.verify');
+});
+
+// Phase 6: Chief Auditor Governance Suite (Admin only with Passcode Verification)
+Route::middleware(['auth', 'verified', 'role:admin', 'admin_passcode'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/governance', [AdminDashboardController::class, 'index'])->name('dashboard');
+    Route::patch('/passcode', [AdminDashboardController::class, 'updatePasscode'])->name('passcode.update');
+    Route::post('/blacklist/{user}', [AdminDashboardController::class, 'toggleBlacklist'])->name('blacklist.toggle');
+    Route::post('/appeals/{appeal}/resolve', [AdminDashboardController::class, 'resolveAppeal'])->name('appeals.resolve');
+});
+
+// Phase 6: Official Audit Report (Admin & Accountant)
+Route::middleware(['auth', 'verified', 'role:admin|accountant'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/audit-report', [AuditReportController::class, 'index'])->name('audit-report');
+});
+
 // Phase 2: Simulation & Dataset Studio (Admin & Accountant only)
 Route::middleware(['auth', 'verified', 'role:admin|accountant'])->prefix('simulation-studio')->name('simulation-studio.')->group(function () {
     Route::get('/', [SimulationStudioController::class, 'index'])->name('index');
@@ -59,6 +81,9 @@ Route::middleware(['auth', 'verified', 'role:admin|accountant'])->prefix('simula
 });
 
 Route::middleware('auth')->group(function () {
+    Route::post('/support/appeals', [SupportAppealController::class, 'store'])->name('support.appeals.store');
+    Route::post('/notifications/mark-read', [SupportAppealController::class, 'markNotificationsRead'])->name('notifications.mark-read');
+
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');

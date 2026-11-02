@@ -321,6 +321,13 @@ export default function Index({ metrics, matches, suspenseItems, filters }: Prop
                             <option value="ayapay">AYA Pay Only</option>
                         </select>
 
+                        <Link
+                            href={route('admin.audit-report')}
+                            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-800 px-3.5 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-700 hover:text-white transition shadow-sm"
+                        >
+                            <span>📄</span> PDF Audit Report
+                        </Link>
+
                         <button
                             type="button"
                             onClick={handleRunReconciliation}

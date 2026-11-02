@@ -59,6 +59,16 @@ class User extends Authenticatable
         return $this->hasMany(Invoice::class, 'user_id');
     }
 
+    public function accountNotifications(): HasMany
+    {
+        return $this->hasMany(AccountNotification::class);
+    }
+
+    public function supportAppeals(): HasMany
+    {
+        return $this->hasMany(SupportAppeal::class);
+    }
+
     public function paymentSlips(): HasMany
     {
         return $this->hasMany(PaymentSlip::class, 'user_id');
