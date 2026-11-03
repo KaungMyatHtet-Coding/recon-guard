@@ -1,59 +1,202 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 🛡️ ReconGuard
+### Automated Multi-Channel Payment & Bank Slip Reconciliation Engine
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+[![Laravel 12](https://img.shields.io/badge/Laravel-12.x-FF2D20?style=for-the-badge&logo=laravel&logoColor=white)](https://laravel.com)
+[![React 18](https://img.shields.io/badge/React-18.x-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.x-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com)
+[![MySQL 8.0](https://img.shields.io/badge/MySQL-8.0-4479A1?style=for-the-badge&logo=mysql&logoColor=white)](https://www.mysql.com)
+[![PHPUnit Tests](https://img.shields.io/badge/Tests-74%20Passed-10B981?style=for-the-badge&logo=checkmarx&logoColor=white)](https://phpunit.de)
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 📌 Executive Summary & Problem Domain
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+In fast-growing emerging markets like Myanmar and Southeast Asia, digital merchant transactions are heavily split across fragmented mobile wallets and banks: **KBZPay, WavePay, CB Pay, and AYA Pay**.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### The Traditional Friction & Fraud Epidemic:
+1. **Manual Screenshot Verification:** Customers upload payment screenshots via chat apps or checkout portals. Finance teams manually inspect each slip—a bottleneck prone to human fatigue.
+2. **Prevalent Slip Fraud Vectors:**
+   - **Photoshop / Canva Amount Inflation:** Altering a 5,000 MMK receipt to claim 500,000 MMK.
+   - **Reused Transaction IDs:** Submitting the same legitimate transaction slip across multiple distinct invoices.
+   - **Duplicate Image Flooding:** Uploading identical receipt images for different orders.
+3. **End-of-Day Bank Statement Discrepancies:**
+   - Each payment provider issues CSV files with completely incompatible column schemas, timestamps, and fee structures.
+   - Bank gateway fees (e.g., 200–500 MMK deductions) cause nominal amounts to mismatch invoice totals, landing legitimate payments into unresolved suspense ledgers.
 
-## Learning Laravel
+**ReconGuard** completely automates this workflow: ingesting varied bank statements through the **Adapter Pattern**, extracting and analyzing slip images with **Zero-Cost Forensics & OCR**, executing an automated **3-Way Reconciliation Engine**, and providing **Chief Auditor Governance** with official PDF reporting.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+---
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## 🏛️ System Architecture
 
-## Laravel Sponsors
+```
+                  ┌────────────────────────────────────────────────────────┐
+                  │                 ReconGuard Core Engine                 │
+                  └────────────────────────────────────────────────────────┘
+                                               │
+         ┌─────────────────────────────────────┼────────────────────────────────────┐
+         ▼                                     ▼                                    ▼
+┌──────────────────┐               ┌───────────────────────┐            ┌───────────────────────┐
+│ Customer Invoice │               │  Customer Slip Image  │            │ Bank Statement CSVs   │
+│  & Order Ledger  │               │      (OCR & EXIF)     │            │(KBZ, Wave, CB, AYA)   │
+└────────┬─────────┘               └───────────┬───────────┘            └───────────┬───────────┘
+         │                                     │                                    │
+         │                             [Forensics & Hash]                   [Adapter Strategy]
+         │                             - SHA-256 Fingerprint                - Header Auto-Detect
+         │                             - EXIF / Tamper Marker               - Gross/Fee/Net Split
+         │                             - Regex Heuristic OCR                - Chunked Ledger Save
+         │                                     │                                    │
+         └───────────────────────┬─────────────┴────────────────────────────────────┘
+                                 │
+                                 ▼
+         ┌─────────────────────────────────────────────────────────┐
+         │          3-Way Automated Reconciliation Engine          │
+         ├─────────────────────────────────────────────────────────┤
+         │ • Tier 1: Exact Match (Channel + TxnID + Gross)  100%   │
+         │ • Tier 2: Fee-Adjusted Match (Gross == Slip)      95%   │
+         │ • Tier 3: Fuzzy Heuristic (Levenshtein Dist <= 2) 75-90%│
+         │ • Tier 4: Fraud Detection (Altered / Reused)     FLAG   │
+         └─────────────────────────┬───────────────────────────────┘
+                                   │
+                                   ▼
+         ┌─────────────────────────────────────────────────────────┐
+         │             Chief Auditor Governance Suite              │
+         ├─────────────────────────────────────────────────────────┤
+         │ • Secondary Passcode Gate (`/admin/gate`)               │
+         │ • Real-Time Fraud Blacklist & Compliance Appeals        │
+         │ • Visual Reconciliation Analytics & Donut Charts        │
+         │ • One-Click Official Printable / PDF Audit Report       │
+         └─────────────────────────────────────────────────────────┘
+```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+---
 
-### Premium Partners
+## 🚀 Key Engineering Highlights
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+### 1. Multi-Bank Statement Adapter Pattern (`app/Services/BankAdapters/`)
+- Normalizes disparate statement files into a unified transaction ledger using a clean Object-Oriented Strategy/Adapter pattern:
+  - `KbzPayStatementAdapter`: Maps `Transaction_No`, `Trade_Time`, `Fee_Amount`, `Settlement_Amount`.
+  - `WavePayStatementAdapter`: Maps `Wave_Txn_ID`, `Date_Time`, `Commission_MMK`, `Net_MMK`.
+  - `CbPayStatementAdapter`: Maps `Ref_No`, `Value_Date`, `Charges`, `Net_Credit`.
+  - `AyaPayStatementAdapter`: Maps `AYA_Trans_Ref`, `Transaction_Date`, `Service_Fee`, `Total_Settled`.
+- **Automatic Channel Heuristics:** Intelligently inspects CSV column headers to auto-detect the payment provider if omitted.
 
-## Contributing
+### 2. Zero-Cost Slip OCR & 3-Layer Image Forensics (`app/Services/SlipOcrAndForensicsService.php`)
+- **Layer 1: SHA-256 Fingerprint:** Detects exact duplicate image files across all historic payments.
+- **Layer 2: Reused Transaction ID:** Cross-references the extracted reference ID across all prior slips for the channel.
+- **Layer 3: EXIF & Binary Marker Forensics:** Inspects image chunks for editing software artifacts (Photoshop, Canva, GIMP) and mock tamper markers.
+- **Smart Fallback OCR:** Extracts `extracted_transaction_id`, `extracted_amount`, `sender_phone`, and `sender_name` with confidence scores.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### 3. Algorithmic 3-Way Reconciliation Engine (`app/Services/ReconciliationEngineService.php`)
+- Cross-references three entities in atomic transactions:
+  1. `exact_match` (100%): Exact channel, reference ID, and gross amount match.
+  2. `fee_adjusted_match` (95%): Provider fee deduced (`gross_amount == slip_amount`, `net_amount == slip_amount - fee`).
+  3. `fuzzy_match` (75–90%): Levenshtein string distance ($\le 2$ character OCR read errors) matched against sender phone and transaction amount within a $\pm 15$ minute window.
+  4. `tampered_fraud` / `duplicate_id_fraud`: Automatic interception with discrepancy ledger entry.
 
-## Code of Conduct
+### 4. Chief Auditor Governance & Audit Reporting (`app/Http/Controllers/Admin/`)
+- Protected by a verified secondary passcode security gate (`/admin/gate`).
+- Dynamic SVG data visualization: Reconciliation Breakdown Donut Chart, Channel Volume Bar Chart.
+- Real-time customer fraud blacklist registry and dispute appeal queue.
+- Official printable/exportable PDF Reconciliation Audit Report with certified reference numbers and digital stamp.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### 5. UI/UX Polish: Dual-Language, Dark/Light Mode & Mobile Experience
+- **Dual-Language Support (`EN | မြန်မာ`):** Built-in React Language Context with instant switching to Myanmar Unicode font (`Noto Sans Myanmar` / `Padauk`).
+- **Dark & Light Mode Terminal:** FinTech dark terminal (`#121212` background, `#1C1C22` surfaces) and high-contrast light mode, persisted via `ThemeContext`.
+- **Mobile Bottom Navigation (`md:hidden`):** Dedicated fixed bottom navigation bar with quick shortcuts for Dashboard, Invoices, Statements, Reconciliation, and Governance.
 
-## Security Vulnerabilities
+---
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## 🔑 Demonstration Accounts
 
-## License
+All demo accounts and sample banking transactions are pre-seeded:
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+| Role | Email | Password | Secondary Gate PIN | Access Permissions |
+| :--- | :--- | :--- | :--- | :--- |
+| **Chief Auditor (Admin)** | `admin@reconguard.test` | `password` | `admin1234` | Full System, Governance Suite, Blacklist, Appeals, PDF Audit Report |
+| **Senior Accountant** | `accountant@reconguard.test` | `password` | `N/A` | Statements Ingestion, 3-Way Reconciliation Workbench, Audit Reports |
+| **Merchant Customer** | `customer@reconguard.test` | `password` | `N/A` | Customer Portal, Submit Slips, OCR Preview, Compliance Appeals |
+
+---
+
+## 💻 Local Setup & Development
+
+### Prerequisites
+- PHP 8.2 or 8.3
+- Composer 2.x
+- Node.js 20.x & npm
+- MySQL 8.0
+
+### Step-by-Step Installation
+
+```bash
+# 1. Clone repository
+git clone https://github.com/KaungMyatHtet-Coding/recon-guard.git
+cd recon-guard
+
+# 2. Install PHP & Node dependencies
+composer install
+npm install
+
+# 3. Configure environment
+cp .env.example .env
+php artisan key:generate
+
+# 4. Configure database in .env (DB_DATABASE=reconguard)
+# Run migrations and seed the comprehensive demo dataset
+php artisan migrate --seed
+
+# 5. Build frontend assets
+npm run build
+# Or run dev hot-reloader: npm run dev
+
+# 6. Start the local server
+php artisan serve
+```
+
+---
+
+## 🧪 Comprehensive Automated Test Suite
+
+ReconGuard features an end-to-end automated test suite covering all phases, including authentication, multi-bank statement ingestion, OCR heuristics, Levenshtein fuzzy matching, and auditor governance.
+
+```bash
+# Run all tests
+php artisan test
+```
+
+```
+   PASS  Tests\Feature\AdminGovernanceAndAuditTest (12 tests)
+   PASS  Tests\Feature\BankStatementIngestionTest (11 tests)
+   PASS  Tests\Feature\DashboardTest (3 tests)
+   PASS  Tests\Feature\InvoicePaymentSlipTest (8 tests)
+   PASS  Tests\Feature\ReconciliationEngineTest (8 tests)
+   PASS  Tests\Feature\SimulationStudioTest (7 tests)
+   PASS  Tests\Feature\Auth\AuthenticationTest (4 tests)
+   ...
+
+   Tests:    74 passed (356 assertions)
+   Duration: ~7.5 seconds
+```
+
+---
+
+## 🐳 Production Deployment & Docker
+
+ReconGuard is ready for cloud deployment (Docker, Railway, Render, AWS ECS) with a multi-stage `Dockerfile` and self-healing startup script:
+
+```bash
+# Build Docker container
+docker build -t reconguard .
+
+# Run container on port 8080
+docker run -p 8080:8080 --env-file .env reconguard
+```
+
+The container automatically links storage, caches configuration and routes, runs pending database migrations, and auto-seeds demonstration datasets if the database is newly initialized.
+
+---
+
+## 📄 License
+This project is open-source software licensed under the [MIT License](LICENSE).

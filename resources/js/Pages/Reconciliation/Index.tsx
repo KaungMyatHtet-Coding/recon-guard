@@ -1,4 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { useLanguage } from '@/Contexts/LanguageContext';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import React, { useState } from 'react';
 
@@ -112,6 +113,7 @@ interface Props {
 export default function Index({ metrics, matches, suspenseItems, filters }: Props) {
     const page = usePage();
     const flash = (page.props as any).flash || {};
+    const { t } = useLanguage();
 
     const [currentTab, setCurrentTab] = useState<string>(filters.tab || 'all');
     const [currentChannel, setCurrentChannel] = useState<string>(filters.channel || 'all');
@@ -194,49 +196,49 @@ export default function Index({ metrics, matches, suspenseItems, filters }: Prop
         switch (matchType) {
             case 'exact_match':
                 return (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-800">
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
-                        Exact 100% Match
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                        {t('status.exact_match', 'Exact 100% Match')}
                     </span>
                 );
             case 'fee_adjusted_match':
                 return (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-950/80 text-indigo-300 border border-indigo-800">
-                        <span className="h-1.5 w-1.5 rounded-full bg-indigo-400"></span>
-                        Fee-Adjusted Gateway
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-100 dark:bg-indigo-950/80 text-indigo-800 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-800">
+                        <span className="h-1.5 w-1.5 rounded-full bg-indigo-500"></span>
+                        {t('status.fee_adjusted_match', 'Fee-Adjusted Gateway')}
                     </span>
                 );
             case 'fuzzy_match':
                 return (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-sky-950/80 text-sky-300 border border-sky-800">
-                        <span className="h-1.5 w-1.5 rounded-full bg-sky-400"></span>
-                        Fuzzy Match (Review)
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-sky-100 dark:bg-sky-950/80 text-sky-800 dark:text-sky-300 border border-sky-300 dark:border-sky-800">
+                        <span className="h-1.5 w-1.5 rounded-full bg-sky-500"></span>
+                        {t('status.fuzzy_match', 'Fuzzy Match (Review)')}
                     </span>
                 );
             case 'amount_mismatch_fraud':
                 return (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-950/80 text-red-300 border border-red-800 animate-pulse">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 dark:bg-red-950/80 text-red-800 dark:text-red-300 border border-red-300 dark:border-red-800 animate-pulse">
                         <span className="h-1.5 w-1.5 rounded-full bg-red-500"></span>
-                        Amount Inflation Fraud
+                        {t('status.amount_mismatch_fraud', 'Amount Inflation Fraud')}
                     </span>
                 );
             case 'fake_slip_fraud':
                 return (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-950/80 text-red-300 border border-red-800 animate-pulse">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 dark:bg-red-950/80 text-red-800 dark:text-red-300 border border-red-300 dark:border-red-800 animate-pulse">
                         <span className="h-1.5 w-1.5 rounded-full bg-red-500"></span>
-                        Forged / Tampered Slip
+                        {t('status.tampered_fraud', 'Forged / Tampered Slip')}
                     </span>
                 );
             case 'duplicate_id_fraud':
                 return (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-orange-950/80 text-orange-300 border border-orange-800">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-orange-100 dark:bg-orange-950/80 text-orange-800 dark:text-orange-300 border border-orange-300 dark:border-orange-800">
                         <span className="h-1.5 w-1.5 rounded-full bg-orange-500"></span>
-                        Reused Duplicate ID
+                        {t('status.duplicate_id_fraud', 'Reused Duplicate ID')}
                     </span>
                 );
             default:
                 return (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-800 text-slate-300 border border-slate-700">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-300 border border-slate-300 dark:border-slate-700">
                         {matchType}
                     </span>
                 );
@@ -247,31 +249,31 @@ export default function Index({ metrics, matches, suspenseItems, filters }: Prop
         switch (status) {
             case 'auto_approved':
                 return (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-950/80 text-emerald-400 border border-emerald-800/80">
-                        ✓ Auto-Approved
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800/80">
+                        ✓ {t('status.auto_approved', 'Auto-Approved')}
                     </span>
                 );
             case 'approved_by_accountant':
                 return (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-blue-950/80 text-blue-400 border border-blue-800/80">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-blue-100 dark:bg-blue-950/80 text-blue-800 dark:text-blue-400 border border-blue-300 dark:border-blue-800/80">
                         ✓ Accountant Approved
                     </span>
                 );
             case 'pending_review':
                 return (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-950/80 text-amber-400 border border-amber-800/80 animate-pulse">
-                        ⏳ Needs Review
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-400 border border-amber-300 dark:border-amber-800/80 animate-pulse">
+                        ⏳ {t('status.pending_review', 'Needs Review')}
                     </span>
                 );
             case 'rejected_fraud':
                 return (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-red-950/80 text-red-400 border border-red-800/80">
-                        ✕ Rejected Fraud
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-red-100 dark:bg-red-950/80 text-red-800 dark:text-red-400 border border-red-300 dark:border-red-800/80">
+                        ✕ {t('status.rejected_fraud', 'Rejected Fraud')}
                     </span>
                 );
             default:
                 return (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-800 text-slate-300 border border-slate-700">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700">
                         {status}
                     </span>
                 );

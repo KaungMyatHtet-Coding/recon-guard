@@ -1,3 +1,6 @@
+import LanguageSwitcher from '@/Components/LanguageSwitcher';
+import ThemeToggle from '@/Components/ThemeToggle';
+import { useLanguage } from '@/Contexts/LanguageContext';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import React, { useState } from 'react';
 
@@ -93,32 +96,37 @@ export default function AuditReport({ records, summary, filters }: Props) {
         return isNaN(num) ? '0.00' : num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     };
 
+    const { t } = useLanguage();
+
     return (
-        <div className="min-h-screen bg-slate-900 text-slate-100 p-4 sm:p-8 print:bg-white print:text-black print:p-0">
+        <div className="min-h-screen bg-slate-50 dark:bg-[#121212] text-slate-900 dark:text-slate-100 p-4 sm:p-8 print:bg-white print:text-black print:p-0 transition-colors duration-200 font-sans">
             <Head title={`Official Audit Report - ${summary.report_ref}`} />
 
             {/* Print Control Toolbar (Hidden in Print) */}
-            <div className="mx-auto max-w-6xl mb-6 rounded-2xl border border-slate-800 bg-slate-850/80 p-4 backdrop-blur shadow-xl print:hidden space-y-3">
+            <div className="mx-auto max-w-6xl mb-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-850/80 p-4 backdrop-blur shadow-xl print:hidden space-y-3">
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
                         <Link
                             href={backUrl}
-                            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-semibold text-slate-300 hover:bg-slate-700 hover:text-white transition"
+                            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white transition"
                         >
                             {backLabel}
                         </Link>
-                        <span className="text-xs text-slate-400">
-                            Ref: <strong className="font-mono text-purple-400">{summary.report_ref}</strong>
+                        <span className="text-xs text-slate-500 dark:text-slate-400">
+                            Ref: <strong className="font-mono text-purple-600 dark:text-purple-400">{summary.report_ref}</strong>
                         </span>
                     </div>
 
                     <div className="flex items-center gap-3">
+                        <LanguageSwitcher />
+                        <ThemeToggle />
+
                         <button
                             type="button"
                             onClick={handlePrint}
                             className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-5 py-2 text-xs font-bold text-white shadow-lg shadow-purple-600/30 hover:from-purple-500 hover:to-indigo-500 transition"
                         >
-                            <span>🖨️</span> Print / Save as PDF
+                            <span>🖨️</span> {t('action.export_pdf', 'Print / Save as PDF')}
                         </button>
                     </div>
                 </div>
@@ -175,9 +183,9 @@ export default function AuditReport({ records, summary, filters }: Props) {
             </div>
 
             {/* Official Audit Document Container */}
-            <div className="mx-auto max-w-6xl rounded-3xl border border-slate-800 bg-slate-950 p-8 sm:p-12 shadow-2xl print:border-none print:shadow-none print:p-6 print:bg-white print:max-w-none">
+            <div className="mx-auto max-w-6xl rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-8 sm:p-12 shadow-2xl print:border-none print:shadow-none print:p-6 print:bg-white print:max-w-none transition-colors duration-200">
                 {/* Official Header */}
-                <div className="flex flex-col sm:flex-row items-start justify-between border-b-2 border-slate-800 print:border-black pb-6 gap-4">
+                <div className="flex flex-col sm:flex-row items-start justify-between border-b-2 border-slate-200 dark:border-slate-800 print:border-black pb-6 gap-4">
                     <div>
                         <div className="flex items-center gap-3">
                             <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-500 p-0.5 shadow-md">
@@ -186,7 +194,7 @@ export default function AuditReport({ records, summary, filters }: Props) {
                                 </div>
                             </div>
                             <div>
-                                <h1 className="text-xl font-black tracking-tight text-white print:text-black">
+                                <h1 className="text-xl font-black tracking-tight text-slate-900 dark:text-white print:text-black">
                                     RECONGUARD ENTERPRISE CO., LTD.
                                 </h1>
                                 <p className="text-xs text-slate-400 print:text-gray-600">
