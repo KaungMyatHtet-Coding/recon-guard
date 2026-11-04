@@ -3,7 +3,12 @@ export interface User {
     name: string;
     email: string;
     phone?: string | null;
+    nrc_number?: string | null;
+    address?: string | null;
+    emergency_contact?: string | null;
     company_name?: string | null;
+    avatar_path?: string | null;
+    avatar_url?: string | null;
     is_blacklisted: boolean;
     blacklist_reason?: string | null;
     roles?: string[];

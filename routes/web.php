@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminBlacklistController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AuditReportController;
 use App\Http\Controllers\BankStatementController;
@@ -35,11 +36,16 @@ Route::middleware(['auth', 'verified'])->prefix('invoices')->name('invoices.')->
     Route::post('/{invoice}/submit-slip', [InvoicePaymentController::class, 'submitSlip'])->middleware('not_blacklisted')->name('submitSlip');
 });
 
-// Phase 4: Multi-Bank Statement CSV Ingestion & Ledger (Admin & Accountant only)
+// Phase 4: Multi-Bank Statement CSV Ingestion & Ledger (Admin & Accountant)
 Route::middleware(['auth', 'verified', 'role:admin|accountant'])->prefix('bank-statements')->name('bank-statements.')->group(function () {
     Route::get('/', [BankStatementController::class, 'index'])->name('index');
     Route::post('/upload', [BankStatementController::class, 'upload'])->name('upload');
     Route::get('/{batch}', [BankStatementController::class, 'show'])->name('show');
+    Route::post('/{batch}/request-rollback', [BankStatementController::class, 'requestRollback'])->name('request-rollback');
+});
+
+// Phase 8A: Batch Permanent Rollback & Deletion (Admin only - Maker-Checker Separation)
+Route::middleware(['auth', 'verified', 'role:admin'])->prefix('bank-statements')->name('bank-statements.')->group(function () {
     Route::delete('/{batch}', [BankStatementController::class, 'destroy'])->name('destroy');
 });
 
@@ -61,8 +67,11 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
 Route::middleware(['auth', 'verified', 'role:admin', 'admin_passcode'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/governance', [AdminDashboardController::class, 'index'])->name('dashboard');
     Route::patch('/passcode', [AdminDashboardController::class, 'updatePasscode'])->name('passcode.update');
-    Route::post('/blacklist/{user}', [AdminDashboardController::class, 'toggleBlacklist'])->name('blacklist.toggle');
-    Route::post('/appeals/{appeal}/resolve', [AdminDashboardController::class, 'resolveAppeal'])->name('appeals.resolve');
+
+    // Dedicated Fraud Defense & Blacklist Management Center
+    Route::get('/blacklist', [AdminBlacklistController::class, 'index'])->name('blacklist.index');
+    Route::post('/blacklist/{user}', [AdminBlacklistController::class, 'toggleBlacklist'])->name('blacklist.toggle');
+    Route::post('/appeals/{appeal}/resolve', [AdminBlacklistController::class, 'resolveAppeal'])->name('appeals.resolve');
 });
 
 // Phase 6: Official Audit Report (Admin & Accountant)
@@ -86,7 +95,8 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::post('/profile/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.avatar.update');
+    Route::delete('/profile/avatar', [ProfileController::class, 'destroyAvatar'])->name('profile.avatar.destroy');
 });
 
 require __DIR__.'/auth.php';

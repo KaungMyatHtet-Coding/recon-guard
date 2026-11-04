@@ -53,6 +53,7 @@ interface SummaryData {
 
 interface Props {
     records: MatchItem[];
+    can_export_pdf?: boolean;
     summary: SummaryData;
     filters: {
         channel: string;
@@ -62,9 +63,9 @@ interface Props {
     };
 }
 
-export default function AuditReport({ records, summary, filters }: Props) {
+export default function AuditReport({ records, can_export_pdf, summary, filters }: Props) {
     const { auth } = usePage().props as any;
-    const isAdmin = auth?.user?.roles?.includes('admin');
+    const isAdmin = Boolean(can_export_pdf ?? auth?.user?.roles?.includes('admin'));
     const backUrl = isAdmin ? route('admin.dashboard') : route('reconciliation.index');
     const backLabel = isAdmin ? '← Back to Governance Suite' : '← Back to 3-Way Reconciliation';
 
@@ -99,11 +100,11 @@ export default function AuditReport({ records, summary, filters }: Props) {
     const { t } = useLanguage();
 
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-[#121212] text-slate-900 dark:text-slate-100 p-4 sm:p-8 print:bg-white print:text-black print:p-0 transition-colors duration-200 font-sans">
+        <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0B0F19] text-[#0F172A] dark:text-[#F8FAFC] p-4 sm:p-8 print:bg-white print:text-black print:p-0 transition-colors duration-200 font-sans">
             <Head title={`Official Audit Report - ${summary.report_ref}`} />
 
             {/* Print Control Toolbar (Hidden in Print) */}
-            <div className="mx-auto max-w-6xl mb-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-850/80 p-4 backdrop-blur shadow-xl print:hidden space-y-3">
+            <div className="mx-auto max-w-6xl mb-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#1E293B] p-4 backdrop-blur shadow-xl print:hidden space-y-3">
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
                         <Link
@@ -121,23 +122,29 @@ export default function AuditReport({ records, summary, filters }: Props) {
                         <LanguageSwitcher />
                         <ThemeToggle />
 
-                        <button
-                            type="button"
-                            onClick={handlePrint}
-                            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-5 py-2 text-xs font-bold text-white shadow-lg shadow-purple-600/30 hover:from-purple-500 hover:to-indigo-500 transition"
-                        >
-                            <span>🖨️</span> {t('action.export_pdf', 'Print / Save as PDF')}
-                        </button>
+                        {isAdmin ? (
+                            <button
+                                type="button"
+                                onClick={handlePrint}
+                                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-5 py-2 text-xs font-bold text-white shadow-lg shadow-purple-600/30 hover:from-purple-500 hover:to-indigo-500 transition"
+                            >
+                                <span>🖨️</span> {t('action.export_pdf', 'Print / Save as PDF')}
+                            </button>
+                        ) : (
+                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300 text-xs font-medium">
+                                <span>🔒</span> Read-Only Preview (Export restricted to Chief Auditor)
+                            </div>
+                        )}
                     </div>
                 </div>
 
                 {/* Filter Controls */}
-                <div className="flex flex-wrap items-center gap-3 border-t border-slate-800 pt-3 text-xs">
-                    <span className="text-slate-400 font-semibold">Filter Report:</span>
+                <div className="flex flex-wrap items-center gap-3 border-t border-slate-200 dark:border-slate-800 pt-3 text-xs">
+                    <span className="text-slate-700 dark:text-slate-300 font-semibold">Filter Report:</span>
                     <select
                         value={selectedChannel}
                         onChange={(e) => setSelectedChannel(e.target.value)}
-                        className="rounded-xl border border-slate-700 bg-slate-900 px-2.5 py-1 text-xs text-slate-200"
+                        className="rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2.5 py-1 text-xs text-slate-900 dark:text-slate-200"
                     >
                         <option value="all">All Channels</option>
                         <option value="kbzpay">KBZPay</option>
@@ -149,7 +156,7 @@ export default function AuditReport({ records, summary, filters }: Props) {
                     <select
                         value={selectedStatus}
                         onChange={(e) => setSelectedStatus(e.target.value)}
-                        className="rounded-xl border border-slate-700 bg-slate-900 px-2.5 py-1 text-xs text-slate-200"
+                        className="rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2.5 py-1 text-xs text-slate-900 dark:text-slate-200"
                     >
                         <option value="all">All Statuses</option>
                         <option value="auto_approved">Auto-Approved</option>
@@ -162,20 +169,20 @@ export default function AuditReport({ records, summary, filters }: Props) {
                         type="date"
                         value={startDate}
                         onChange={(e) => setStartDate(e.target.value)}
-                        className="rounded-xl border border-slate-700 bg-slate-900 px-2.5 py-1 text-xs text-slate-200"
+                        className="rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2.5 py-1 text-xs text-slate-900 dark:text-slate-200"
                     />
 
                     <input
                         type="date"
                         value={endDate}
                         onChange={(e) => setEndDate(e.target.value)}
-                        className="rounded-xl border border-slate-700 bg-slate-900 px-2.5 py-1 text-xs text-slate-200"
+                        className="rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2.5 py-1 text-xs text-slate-900 dark:text-slate-200"
                     />
 
                     <button
                         type="button"
                         onClick={handleFilter}
-                        className="rounded-xl bg-slate-800 border border-slate-700 px-3 py-1 text-xs font-semibold text-slate-200 hover:bg-slate-700"
+                        className="rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 px-3 py-1 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition"
                     >
                         Apply Filters
                     </button>
@@ -197,67 +204,67 @@ export default function AuditReport({ records, summary, filters }: Props) {
                                 <h1 className="text-xl font-black tracking-tight text-slate-900 dark:text-white print:text-black">
                                     RECONGUARD ENTERPRISE CO., LTD.
                                 </h1>
-                                <p className="text-xs text-slate-400 print:text-gray-600">
+                                <p className="text-xs text-slate-600 dark:text-slate-400 print:text-gray-600">
                                     Multi-Channel Automated Payment Reconciliation & Fraud Detection Engine
                                 </p>
                             </div>
                         </div>
-                        <div className="mt-3 text-[11px] text-slate-400 print:text-gray-700 space-y-0.5">
+                        <div className="mt-3 text-[11px] text-slate-600 dark:text-slate-400 print:text-gray-700 space-y-0.5">
                             <div>Corporate Financial Audit & Compliance Division</div>
                             <div>Yangon Financial Technology Tower, Strand Road, Yangon, Myanmar</div>
                         </div>
                     </div>
 
                     <div className="text-left sm:text-right text-xs space-y-1">
-                        <div className="font-mono text-purple-400 print:text-purple-700 font-bold text-sm">
+                        <div className="font-mono text-purple-600 dark:text-purple-400 print:text-purple-700 font-bold text-sm">
                             {summary.report_ref}
                         </div>
-                        <div className="text-slate-400 print:text-gray-600">
-                            Generated: <strong className="text-slate-200 print:text-black">{summary.generation_timestamp}</strong>
+                        <div className="text-slate-600 dark:text-slate-400 print:text-gray-600">
+                            Generated: <strong className="text-slate-900 dark:text-slate-200 print:text-black">{summary.generation_timestamp}</strong>
                         </div>
-                        <div className="text-slate-400 print:text-gray-600">
-                            Lead Auditor: <strong className="text-slate-200 print:text-black">{summary.auditor_name}</strong>
+                        <div className="text-slate-600 dark:text-slate-400 print:text-gray-600">
+                            Lead Auditor: <strong className="text-slate-900 dark:text-slate-200 print:text-black">{summary.auditor_name}</strong>
                         </div>
-                        <div className="text-slate-400 print:text-gray-600">
-                            Classification: <strong className="text-emerald-400 print:text-emerald-700 uppercase">Official Audit Certificate</strong>
+                        <div className="text-slate-600 dark:text-slate-400 print:text-gray-600">
+                            Classification: <strong className="text-emerald-600 dark:text-emerald-400 print:text-emerald-700 uppercase font-bold">Official Audit Certificate</strong>
                         </div>
                     </div>
                 </div>
 
                 {/* Executive Summary Cards / Table */}
                 <div className="my-8">
-                    <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400 print:text-gray-600 mb-3">
+                    <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-400 print:text-gray-600 mb-3">
                         Executive Reconciliation Audit Summary
                     </h2>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 border border-slate-800 print:border-gray-300 rounded-2xl p-4 bg-slate-900/60 print:bg-gray-50">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 border border-slate-200 dark:border-slate-800 print:border-gray-300 rounded-2xl p-4 bg-slate-50 dark:bg-slate-900/60 print:bg-gray-50">
                         <div>
-                            <div className="text-[11px] text-slate-400 print:text-gray-600 uppercase font-semibold">Total Audited Transactions</div>
-                            <div className="text-xl font-black text-white print:text-black mt-1">{summary.total_records}</div>
+                            <div className="text-[11px] text-slate-600 dark:text-slate-400 print:text-gray-600 uppercase font-semibold">Total Audited Transactions</div>
+                            <div className="text-xl font-black text-slate-900 dark:text-white print:text-black mt-1">{summary.total_records}</div>
                         </div>
                         <div>
-                            <div className="text-[11px] text-slate-400 print:text-gray-600 uppercase font-semibold">Verified Settled Volume</div>
-                            <div className="text-xl font-black text-emerald-400 print:text-emerald-700 mt-1 font-mono">{summary.formatted_matched_volume} <span className="text-xs font-normal text-slate-400 print:text-gray-600">MMK</span></div>
+                            <div className="text-[11px] text-slate-600 dark:text-slate-400 print:text-gray-600 uppercase font-semibold">Verified Settled Volume</div>
+                            <div className="text-xl font-black text-emerald-600 dark:text-emerald-400 print:text-emerald-700 mt-1 font-mono">{summary.formatted_matched_volume} <span className="text-xs font-normal text-slate-500 print:text-gray-600">MMK</span></div>
                         </div>
                         <div>
-                            <div className="text-[11px] text-slate-400 print:text-gray-600 uppercase font-semibold">Channel Commission / Fees</div>
-                            <div className="text-xl font-black text-amber-400 print:text-amber-700 mt-1 font-mono">{summary.formatted_variance_fees} <span className="text-xs font-normal text-slate-400 print:text-gray-600">MMK</span></div>
+                            <div className="text-[11px] text-slate-600 dark:text-slate-400 print:text-gray-600 uppercase font-semibold">Channel Commission / Fees</div>
+                            <div className="text-xl font-black text-amber-600 dark:text-amber-400 print:text-amber-700 mt-1 font-mono">{summary.formatted_variance_fees} <span className="text-xs font-normal text-slate-500 print:text-gray-600">MMK</span></div>
                         </div>
                         <div>
-                            <div className="text-[11px] text-slate-400 print:text-gray-600 uppercase font-semibold">Intercepted Fraud Prevented</div>
-                            <div className="text-xl font-black text-red-400 print:text-red-700 mt-1 font-mono">{summary.formatted_fraud_prevented} <span className="text-xs font-normal text-slate-400 print:text-gray-600">MMK</span></div>
+                            <div className="text-[11px] text-slate-600 dark:text-slate-400 print:text-gray-600 uppercase font-semibold">Intercepted Fraud Prevented</div>
+                            <div className="text-xl font-black text-red-600 dark:text-red-400 print:text-red-700 mt-1 font-mono">{summary.formatted_fraud_prevented} <span className="text-xs font-normal text-slate-500 print:text-gray-600">MMK</span></div>
                         </div>
                     </div>
                 </div>
 
                 {/* Itemized Audit Trail Table */}
                 <div className="my-8">
-                    <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400 print:text-gray-600 mb-3">
+                    <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-400 print:text-gray-600 mb-3">
                         Itemized 3-Way Reconciliation Audit Trail ({records.length} records)
                     </h2>
 
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left text-[11px] border border-slate-800 print:border-gray-300">
-                            <thead className="bg-slate-900 print:bg-gray-100 text-slate-300 print:text-gray-800 border-b border-slate-800 print:border-gray-300 uppercase font-bold text-[10px]">
+                        <table className="w-full text-left text-[11px] border border-slate-200 dark:border-slate-800 print:border-gray-300">
+                            <thead className="bg-slate-50 dark:bg-slate-900 print:bg-gray-100 text-slate-700 dark:text-slate-300 border-b border-slate-200 dark:border-slate-800 print:border-gray-300 uppercase font-bold text-[10px]">
                                 <tr>
                                     <th className="px-3 py-2.5">Invoice #</th>
                                     <th className="px-3 py-2.5">Customer</th>
@@ -270,7 +277,7 @@ export default function AuditReport({ records, summary, filters }: Props) {
                                     <th className="px-3 py-2.5">Status</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-800 print:divide-gray-200">
+                            <tbody className="divide-y divide-slate-200 dark:divide-slate-800 print:divide-gray-200">
                                 {records.length === 0 ? (
                                     <tr>
                                         <td colSpan={9} className="px-3 py-6 text-center text-slate-500">
@@ -279,44 +286,44 @@ export default function AuditReport({ records, summary, filters }: Props) {
                                     </tr>
                                 ) : (
                                     records.map((r) => (
-                                        <tr key={r.id} className="hover:bg-slate-900/40 print:hover:bg-transparent">
-                                            <td className="px-3 py-2 font-mono font-bold text-white print:text-black">
+                                        <tr key={r.id} className="hover:bg-slate-50 dark:hover:bg-slate-900/40 print:hover:bg-transparent transition">
+                                            <td className="px-3 py-2 font-mono font-bold text-slate-900 dark:text-white print:text-black">
                                                 {r.invoice?.invoice_number || 'N/A'}
                                             </td>
-                                            <td className="px-3 py-2 text-slate-300 print:text-gray-800">
+                                            <td className="px-3 py-2 text-slate-800 dark:text-slate-300 print:text-gray-800">
                                                 {r.invoice?.customer_name || 'N/A'}
                                             </td>
-                                            <td className="px-3 py-2 font-mono uppercase font-bold text-slate-400 print:text-gray-700">
+                                            <td className="px-3 py-2 font-mono uppercase font-bold text-slate-600 dark:text-slate-400 print:text-gray-700">
                                                 {r.payment_slip?.payment_channel || r.bank_transaction?.payment_channel || '—'}
                                             </td>
-                                            <td className="px-3 py-2 font-mono text-slate-300 print:text-gray-800 truncate max-w-[120px]">
+                                            <td className="px-3 py-2 break-all font-mono text-[10px] leading-tight min-w-[130px] text-slate-800 dark:text-slate-300 print:text-gray-800">
                                                 {r.bank_transaction?.bank_transaction_id || r.payment_slip?.extracted_transaction_id || '—'}
                                             </td>
-                                            <td className="px-3 py-2 text-right font-mono text-slate-200 print:text-black">
+                                            <td className="px-3 py-2 text-right font-mono text-slate-800 dark:text-slate-200 print:text-black">
                                                 {formatMmk(r.slip_amount)}
                                             </td>
-                                            <td className="px-3 py-2 text-right font-mono text-slate-200 print:text-black font-semibold">
+                                            <td className="px-3 py-2 text-right font-mono text-slate-900 dark:text-slate-200 print:text-black font-semibold">
                                                 {formatMmk(r.bank_amount)}
                                             </td>
                                             <td className="px-3 py-2 text-right font-mono">
                                                 {parseFloat(String(r.variance_amount)) > 0 ? (
-                                                    <span className="text-red-400 print:text-red-700 font-bold">
+                                                    <span className="text-red-600 dark:text-red-400 print:text-red-700 font-bold">
                                                         +{formatMmk(r.variance_amount)}
                                                     </span>
                                                 ) : (
                                                     <span className="text-slate-500 print:text-gray-400">0.00</span>
                                                 )}
                                             </td>
-                                            <td className="px-3 py-2 font-medium text-slate-300 print:text-gray-800">
+                                            <td className="px-3 py-2 font-medium text-slate-800 dark:text-slate-300 print:text-gray-800">
                                                 {r.match_type}
                                             </td>
                                             <td className="px-3 py-2 font-semibold">
                                                 <span className={`px-1.5 py-0.5 rounded text-[10px] ${
                                                     r.status === 'auto_approved' || r.status === 'approved_by_accountant'
-                                                        ? 'bg-emerald-950/80 text-emerald-400 print:bg-emerald-100 print:text-emerald-800'
+                                                        ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-400 print:bg-emerald-100 print:text-emerald-800'
                                                         : r.status === 'rejected_fraud'
-                                                        ? 'bg-red-950/80 text-red-400 print:bg-red-100 print:text-red-800'
-                                                        : 'bg-amber-950/80 text-amber-400 print:bg-amber-100 print:text-amber-800'
+                                                        ? 'bg-red-100 dark:bg-red-950/80 text-red-800 dark:text-red-400 print:bg-red-100 print:text-red-800'
+                                                        : 'bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-400 print:bg-amber-100 print:text-amber-800'
                                                 }`}>
                                                     {r.status}
                                                 </span>
@@ -330,40 +337,40 @@ export default function AuditReport({ records, summary, filters }: Props) {
                 </div>
 
                 {/* Audit Certificate Signatures & Seals */}
-                <div className="mt-16 pt-8 border-t-2 border-slate-800 print:border-black grid grid-cols-1 sm:grid-cols-3 gap-8 text-center text-xs">
+                <div className="mt-16 pt-8 border-t-2 border-slate-200 dark:border-slate-800 print:border-black grid grid-cols-1 sm:grid-cols-3 gap-8 text-center text-xs">
                     {/* Auditor Signature */}
                     <div className="space-y-3">
-                        <div className="h-16 border-b border-dashed border-slate-700 print:border-gray-400 flex items-end justify-center pb-2">
-                            <span className="font-serif italic text-purple-400 print:text-gray-800 text-sm">
+                        <div className="h-16 border-b border-dashed border-slate-300 dark:border-slate-700 print:border-gray-400 flex items-end justify-center pb-2">
+                            <span className="font-serif italic text-purple-600 dark:text-purple-400 print:text-gray-800 text-sm">
                                 {summary.auditor_name}
                             </span>
                         </div>
-                        <div className="font-bold text-white print:text-black">{summary.auditor_name}</div>
-                        <div className="text-[11px] text-slate-400 print:text-gray-600">Chief Financial Auditor</div>
+                        <div className="font-bold text-slate-900 dark:text-white print:text-black">{summary.auditor_name}</div>
+                        <div className="text-[11px] text-slate-600 dark:text-slate-400 print:text-gray-600">Chief Financial Auditor</div>
                     </div>
 
                     {/* Corporate Seal Placeholder */}
                     <div className="flex flex-col items-center justify-center">
-                        <div className="h-20 w-20 rounded-full border-2 border-dashed border-purple-500/60 print:border-gray-500 flex items-center justify-center text-[10px] font-bold text-purple-400 print:text-gray-700 uppercase tracking-widest text-center p-2">
+                        <div className="h-20 w-20 rounded-full border-2 border-dashed border-purple-500/60 print:border-gray-500 flex items-center justify-center text-[10px] font-bold text-purple-600 dark:text-purple-400 print:text-gray-700 uppercase tracking-widest text-center p-2">
                             Official Audit Seal
                         </div>
-                        <div className="text-[10px] text-slate-500 print:text-gray-500 mt-2">ReconGuard Verification</div>
+                        <div className="text-[10px] text-slate-600 dark:text-slate-400 print:text-gray-500 mt-2">ReconGuard Verification</div>
                     </div>
 
                     {/* CFO / Comptroller Signature */}
                     <div className="space-y-3">
-                        <div className="h-16 border-b border-dashed border-slate-700 print:border-gray-400 flex items-end justify-center pb-2">
-                            <span className="font-serif italic text-indigo-400 print:text-gray-800 text-sm">
+                        <div className="h-16 border-b border-dashed border-slate-300 dark:border-slate-700 print:border-gray-400 flex items-end justify-center pb-2">
+                            <span className="font-serif italic text-indigo-600 dark:text-indigo-400 print:text-gray-800 text-sm">
                                 Daw Aye Aye Mar
                             </span>
                         </div>
-                        <div className="font-bold text-white print:text-black">Daw Aye Aye Mar</div>
-                        <div className="text-[11px] text-slate-400 print:text-gray-600">Chief Financial Officer / Comptroller</div>
+                        <div className="font-bold text-slate-900 dark:text-white print:text-black">Daw Aye Aye Mar</div>
+                        <div className="text-[11px] text-slate-600 dark:text-slate-400 print:text-gray-600">Chief Financial Officer / Comptroller</div>
                     </div>
                 </div>
 
                 {/* Disclaimer Footnote */}
-                <div className="mt-12 text-center text-[10px] text-slate-500 print:text-gray-500 border-t border-slate-900 print:border-gray-200 pt-4">
+                <div className="mt-12 text-center text-[10px] text-slate-600 dark:text-slate-400 print:text-gray-500 border-t border-slate-200 dark:border-slate-800 print:border-gray-200 pt-4">
                     This document is an automated electronic certification produced by ReconGuard Enterprise Engine. Any manual tampering, erasure, or unauthorized duplication invalidates this audit certificate.
                 </div>
             </div>

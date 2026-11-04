@@ -86,7 +86,22 @@ class AdminGovernanceAndAuditTest extends TestCase
             ->has('kpis')
             ->has('donutStats')
             ->has('channelStats')
+        );
+    }
+
+    public function test_verified_admin_can_access_blacklist_management_center(): void
+    {
+        $response = $this->actingAs($this->admin)
+            ->withSession(['admin_passcode_verified' => true])
+            ->get('/admin/blacklist');
+
+        $response->assertStatus(200);
+        $response->assertInertia(fn ($page) => $page
+            ->component('Admin/Blacklist')
             ->has('blacklistedUsers')
+            ->has('recentFraudMatches')
+            ->has('customers')
+            ->has('appeals')
         );
     }
 
@@ -141,6 +156,7 @@ class AdminGovernanceAndAuditTest extends TestCase
             ->component('Admin/AuditReport')
             ->has('records')
             ->has('summary')
+            ->where('can_export_pdf', false)
         );
     }
 
@@ -286,6 +302,7 @@ class AdminGovernanceAndAuditTest extends TestCase
             ->has('records')
             ->has('summary')
             ->has('filters')
+            ->where('can_export_pdf', true)
         );
     }
 }

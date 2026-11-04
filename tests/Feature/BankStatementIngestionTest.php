@@ -282,7 +282,7 @@ class BankStatementIngestionTest extends TestCase
         );
     }
 
-    public function test_can_delete_and_rollback_batch(): void
+    public function test_maker_checker_batch_rollback_workflow(): void
     {
         $batch = BankStatementBatch::create([
             'uploaded_by' => $this->accountant->id,
@@ -308,9 +308,26 @@ class BankStatementIngestionTest extends TestCase
         $this->assertDatabaseHas('bank_statement_batches', ['id' => $batch->id]);
         $this->assertDatabaseHas('bank_transactions', ['bank_transaction_id' => 'CB_ROLLBACK_TEST_01']);
 
-        $response = $this->actingAs($this->accountant)->delete("/bank-statements/{$batch->id}");
+        // 1. Accountant cannot directly delete batch (Maker-Checker violation -> 403 Forbidden)
+        $unauthorizedDelete = $this->actingAs($this->accountant)->delete("/bank-statements/{$batch->id}");
+        $unauthorizedDelete->assertStatus(403);
+        $this->assertDatabaseHas('bank_statement_batches', ['id' => $batch->id]);
 
-        $response->assertRedirect('/bank-statements');
+        // 2. Accountant submits rollback request with justification
+        $requestResponse = $this->actingAs($this->accountant)->post("/bank-statements/{$batch->id}/request-rollback", [
+            'reason' => 'Duplicate transactions detected in uploaded CSV statement.',
+        ]);
+        $requestResponse->assertRedirect();
+        $this->assertDatabaseHas('bank_statement_batches', [
+            'id' => $batch->id,
+            'rollback_requested' => true,
+            'rollback_reason' => 'Duplicate transactions detected in uploaded CSV statement.',
+            'rollback_requested_by' => $this->accountant->id,
+        ]);
+
+        // 3. Chief Auditor (Admin) executes permanent rollback and deletion
+        $adminDelete = $this->actingAs($this->admin)->delete("/bank-statements/{$batch->id}");
+        $adminDelete->assertRedirect('/bank-statements');
         $this->assertDatabaseMissing('bank_statement_batches', ['id' => $batch->id]);
         $this->assertDatabaseMissing('bank_transactions', ['bank_transaction_id' => 'CB_ROLLBACK_TEST_01']);
     }

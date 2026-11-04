@@ -146,13 +146,10 @@ export default function InvoicesIndex({
             header={
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
-                        <h2 className="text-xl font-bold leading-tight text-white flex items-center space-x-2">
-                            <span>Invoices & Slip Payment Portal</span>
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-indigo-950 text-indigo-300 border border-indigo-700">
-                                Phase 3 Portal
-                            </span>
+                        <h2 className="text-xl font-bold leading-tight text-slate-900 dark:text-white">
+                            Invoices & Slip Payment Portal
                         </h2>
-                        <p className="text-xs text-slate-400 mt-1">
+                        <p className="text-xs text-slate-700 dark:text-slate-400 mt-1">
                             Pay invoices via KBZPay, WavePay, CB Pay, or AYA Pay, upload payment slips, and run instant OCR forensics
                         </p>
                     </div>
@@ -161,7 +158,7 @@ export default function InvoicesIndex({
                         <button
                             type="button"
                             onClick={() => setShowCreateModal(true)}
-                            className="inline-flex items-center px-3.5 py-2 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/20 transition gap-1.5"
+                            className="inline-flex items-center px-3.5 py-2 rounded-xl text-xs font-semibold bg-[#705CF6] hover:bg-[#5f4be3] text-white shadow-sm transition gap-1.5"
                         >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
@@ -176,21 +173,21 @@ export default function InvoicesIndex({
 
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-6">
                 {/* Filter Tabs */}
-                <div className="flex flex-wrap items-center gap-2 border-b border-slate-800 pb-3">
+                <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
                     {tabs.map((tab) => {
                         const active = currentTab === tab.id;
                         return (
                             <Link
                                 key={tab.id}
                                 href={route('invoices.index', { tab: tab.id })}
-                                className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-2 ${
+                                className={`px-3.5 py-1.5 rounded-xl text-xs font-medium transition flex items-center gap-2 ${
                                     active
-                                        ? 'bg-indigo-600 text-white font-semibold shadow-md shadow-indigo-600/30'
-                                        : 'bg-slate-800/80 text-slate-400 hover:text-white hover:bg-slate-800'
+                                        ? 'bg-[#705CF6] text-white font-semibold shadow-sm'
+                                        : 'bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800'
                                 }`}
                             >
                                 <span>{tab.label}</span>
-                                <span className={`px-1.5 py-0.2 rounded text-[10px] ${active ? 'bg-indigo-800 text-indigo-200' : 'bg-slate-700 text-slate-300'}`}>
+                                <span className={`px-1.5 py-0.2 rounded-md text-[10px] font-bold ${active ? 'bg-purple-900/60 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'}`}>
                                     {tab.count}
                                 </span>
                             </Link>
@@ -199,10 +196,10 @@ export default function InvoicesIndex({
                 </div>
 
                 {/* Invoices List Table */}
-                <div className="overflow-hidden rounded-xl border border-slate-800 bg-slate-800/40 backdrop-blur">
+                <div className="overflow-hidden rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-[#161B26] shadow-sm">
                     <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-slate-800 text-left text-sm">
-                            <thead className="bg-slate-900/60 text-xs uppercase tracking-wider text-slate-400 font-semibold">
+                        <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-800 text-left text-sm">
+                            <thead className="bg-slate-50/80 dark:bg-slate-900/60 text-xs uppercase tracking-wider text-slate-700 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-slate-800">
                                 <tr>
                                     <th className="px-6 py-3.5">Invoice #</th>
                                     <th className="px-6 py-3.5">Customer & Phone</th>
@@ -213,26 +210,26 @@ export default function InvoicesIndex({
                                     <th className="px-6 py-3.5 text-right">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-800 text-slate-300">
+                            <tbody className="divide-y divide-slate-200 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
                                 {invoices.data.length === 0 ? (
                                     <tr>
-                                        <td colSpan={7} className="px-6 py-12 text-center text-slate-500 text-sm">
+                                        <td colSpan={7} className="px-6 py-12 text-center text-slate-500 dark:text-slate-400 text-sm">
                                             No invoices found in this filter view.
                                         </td>
                                     </tr>
                                 ) : (
                                     invoices.data.map((inv) => (
-                                        <tr key={inv.id} className="hover:bg-slate-800/50 transition">
-                                            <td className="whitespace-nowrap px-6 py-4 font-mono font-bold text-indigo-300">
+                                        <tr key={inv.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                                            <td className="whitespace-nowrap px-6 py-4 font-mono font-bold text-[#705CF6] dark:text-indigo-400">
                                                 <Link href={route('invoices.show', inv.id)} className="hover:underline">
                                                     {inv.invoice_number}
                                                 </Link>
                                             </td>
                                             <td className="whitespace-nowrap px-6 py-4">
-                                                <div className="font-medium text-white">{inv.customer_name}</div>
-                                                <div className="text-xs text-slate-400">{inv.customer_phone || '09#########'}</div>
+                                                <div className="font-semibold text-slate-900 dark:text-white">{inv.customer_name}</div>
+                                                <div className="text-xs text-slate-500 dark:text-slate-400">{inv.customer_phone || '09#########'}</div>
                                             </td>
-                                            <td className="whitespace-nowrap px-6 py-4 font-mono font-semibold text-white">
+                                            <td className="whitespace-nowrap px-6 py-4 font-mono font-semibold text-slate-900 dark:text-white">
                                                 {formatMMK(inv.amount)}
                                             </td>
                                             <td className="whitespace-nowrap px-6 py-4">
@@ -242,8 +239,8 @@ export default function InvoicesIndex({
                                                 {getStatusBadge(inv.status)}
                                             </td>
                                             <td className="whitespace-nowrap px-6 py-4">
-                                                <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold ${
-                                                    inv.payment_slips_count > 0 ? 'bg-sky-950 text-sky-300 border border-sky-800' : 'bg-slate-800 text-slate-500'
+                                                <span className={`inline-flex items-center px-2 py-0.5 rounded-lg text-xs font-semibold ${
+                                                    inv.payment_slips_count > 0 ? 'bg-sky-50 dark:bg-sky-950 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
                                                 }`}>
                                                     {inv.payment_slips_count} {inv.payment_slips_count === 1 ? 'Slip' : 'Slips'}
                                                 </span>
@@ -251,7 +248,7 @@ export default function InvoicesIndex({
                                             <td className="whitespace-nowrap px-6 py-4 text-right">
                                                 <Link
                                                     href={route('invoices.show', inv.id)}
-                                                    className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-700 hover:bg-slate-600 text-white border border-slate-600 transition gap-1"
+                                                    className="inline-flex items-center px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition gap-1"
                                                 >
                                                     <span>View / Upload Slip</span>
                                                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -268,16 +265,16 @@ export default function InvoicesIndex({
 
                     {/* Pagination */}
                     {invoices.total > 15 && (
-                        <div className="p-4 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
+                        <div className="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
                             <div>Showing page {invoices.current_page} of {invoices.last_page} ({invoices.total} total)</div>
                             <div className="flex gap-2">
                                 {invoices.prev_page_url && (
-                                    <Link href={invoices.prev_page_url} className="px-3 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200">
+                                    <Link href={invoices.prev_page_url} className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700">
                                         Previous
                                     </Link>
                                 )}
                                 {invoices.next_page_url && (
-                                    <Link href={invoices.next_page_url} className="px-3 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200">
+                                    <Link href={invoices.next_page_url} className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700">
                                         Next
                                     </Link>
                                 )}
@@ -289,11 +286,11 @@ export default function InvoicesIndex({
 
             {/* Create Invoice Modal (For Admin & Accountant) */}
             {showCreateModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-                    <div className="w-full max-w-lg rounded-2xl bg-slate-900 border border-slate-800 p-6 shadow-2xl space-y-4">
-                        <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-                            <h3 className="text-base font-bold text-white flex items-center gap-2">
-                                <span className="p-1 rounded bg-indigo-500/10 text-indigo-400">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+                    <div className="w-full max-w-lg rounded-2xl bg-white dark:bg-[#161B26] border border-slate-200 dark:border-slate-800 p-6 shadow-2xl space-y-4">
+                        <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+                            <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                                <span className="p-1.5 rounded-xl bg-[#705CF6]/10 text-[#705CF6]">
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                     </svg>
@@ -303,7 +300,7 @@ export default function InvoicesIndex({
                             <button
                                 type="button"
                                 onClick={() => setShowCreateModal(false)}
-                                className="text-slate-400 hover:text-white"
+                                className="text-slate-400 hover:text-slate-600 dark:hover:text-white p-1 rounded-lg"
                             >
                                 ✕
                             </button>
@@ -311,14 +308,14 @@ export default function InvoicesIndex({
 
                         <form onSubmit={handleCreateInvoice} className="space-y-4">
                             <div>
-                                <label className="block text-xs font-medium text-slate-300 mb-1">
+                                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                                     Target Customer Account
                                 </label>
                                 <select
                                     value={createData.user_id}
                                     onChange={(e) => setCreateData('user_id', e.target.value)}
                                     required
-                                    className="w-full rounded-lg bg-slate-800 border border-slate-700 text-sm text-white"
+                                    className="w-full rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-sm text-slate-900 dark:text-white"
                                 >
                                     {customers.map((c) => (
                                         <option key={c.id} value={c.id}>
@@ -330,7 +327,7 @@ export default function InvoicesIndex({
 
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-xs font-medium text-slate-300 mb-1">
+                                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                                         Amount (MMK)
                                     </label>
                                     <input
@@ -339,18 +336,18 @@ export default function InvoicesIndex({
                                         onChange={(e) => setCreateData('amount', e.target.value)}
                                         required
                                         placeholder="250000"
-                                        className="w-full rounded-lg bg-slate-800 border border-slate-700 text-sm text-white"
+                                        className="w-full rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-sm text-slate-900 dark:text-white"
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-medium text-slate-300 mb-1">
+                                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                                         Expected Channel
                                     </label>
                                     <select
                                         value={createData.expected_channel}
                                         onChange={(e) => setCreateData('expected_channel', e.target.value)}
-                                        className="w-full rounded-lg bg-slate-800 border border-slate-700 text-sm text-white"
+                                        className="w-full rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-sm text-slate-900 dark:text-white"
                                     >
                                         <option value="any">Any Mobile Wallet / Bank</option>
                                         <option value="kbzpay">KBZPay (KPay)</option>
@@ -362,7 +359,7 @@ export default function InvoicesIndex({
                             </div>
 
                             <div>
-                                <label className="block text-xs font-medium text-slate-300 mb-1">
+                                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                                     Description / Line Items
                                 </label>
                                 <input
@@ -370,7 +367,7 @@ export default function InvoicesIndex({
                                     value={createData.description}
                                     onChange={(e) => setCreateData('description', e.target.value)}
                                     placeholder="Quarterly Server Hardware Deposit"
-                                    className="w-full rounded-lg bg-slate-800 border border-slate-700 text-sm text-white"
+                                    className="w-full rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-sm text-slate-900 dark:text-white"
                                 />
                             </div>
 
@@ -378,14 +375,14 @@ export default function InvoicesIndex({
                                 <button
                                     type="button"
                                     onClick={() => setShowCreateModal(false)}
-                                    className="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300"
+                                    className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={createProcessing}
-                                    className="px-5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white shadow-md shadow-indigo-600/30 transition disabled:opacity-50"
+                                    className="px-5 py-2 rounded-xl bg-[#705CF6] hover:bg-[#5f4be3] text-xs font-semibold text-white shadow-sm transition disabled:opacity-50"
                                 >
                                     {createProcessing ? 'Creating...' : 'Issue Invoice'}
                                 </button>

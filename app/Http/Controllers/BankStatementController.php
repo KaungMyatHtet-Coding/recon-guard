@@ -39,7 +39,7 @@ class BankStatementController extends Controller
             ->keyBy('payment_channel');
 
         // Batches List
-        $batches = BankStatementBatch::with('uploader:id,name,email')
+        $batches = BankStatementBatch::with(['uploader:id,name,email', 'rollbackRequester:id,name,email'])
             ->latest('id')
             ->paginate(8, ['*'], 'batches_page')
             ->withQueryString();
@@ -129,7 +129,7 @@ class BankStatementController extends Controller
      */
     public function show(BankStatementBatch $batch): Response
     {
-        $batch->load('uploader:id,name,email');
+        $batch->load(['uploader:id,name,email', 'rollbackRequester:id,name,email']);
 
         $transactions = BankTransaction::where('batch_id', $batch->id)
             ->latest('id')
@@ -143,16 +143,40 @@ class BankStatementController extends Controller
     }
 
     /**
-     * Rollback/delete an uploaded batch and all its associated transactions.
+     * Request a batch rollback (Maker-Checker workflow for accountants).
      */
-    public function destroy(BankStatementBatch $batch): RedirectResponse
+    public function requestRollback(Request $request, BankStatementBatch $batch): RedirectResponse
     {
+        $validated = $request->validate([
+            'reason' => ['required', 'string', 'max:500'],
+        ]);
+
+        $batch->update([
+            'rollback_requested' => true,
+            'rollback_reason' => $validated['reason'],
+            'rollback_requested_at' => now(),
+            'rollback_requested_by' => $request->user()->id,
+        ]);
+
+        return redirect()->back()
+            ->with('success', "Rollback request for batch '{$batch->original_filename}' submitted successfully for Chief Auditor review.");
+    }
+
+    /**
+     * Rollback/delete an uploaded batch and all its associated transactions (Admin only).
+     */
+    public function destroy(Request $request, BankStatementBatch $batch): RedirectResponse
+    {
+        if (! $request->user()->hasRole('admin')) {
+            abort(403, 'Unauthorized. Only Chief Auditor (Admin) has permission to permanently rollback and delete batches.');
+        }
+
         $filename = $batch->original_filename;
         $count = $batch->transactions()->count();
 
         $batch->delete();
 
         return redirect()->route('bank-statements.index')
-            ->with('success', "Batch '{$filename}' and all its {$count} transactions were successfully removed.");
+            ->with('success', "Batch '{$filename}' and all its {$count} transactions were permanently rolled back.");
     }
 }

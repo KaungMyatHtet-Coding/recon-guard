@@ -5,6 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
         <title inertia>{{ config('app.name', 'ReconGuard') }}</title>
+        <link rel="icon" type="image/png" href="/images/logo.png">
 
         <!-- Google Fonts: Figtree + Noto Sans Myanmar & Padauk for Myanmar Unicode -->
         <link rel="preconnect" href="https://fonts.googleapis.com">

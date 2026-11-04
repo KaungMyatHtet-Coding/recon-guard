@@ -4,31 +4,26 @@ import { useLanguage } from '@/Contexts/LanguageContext';
 export default function LanguageSwitcher({ className = '' }: { className?: string }) {
     const { language, setLanguage } = useLanguage();
 
+    const activeClass = "bg-[#705CF6] text-white shadow-xs font-bold px-2.5 py-1 text-xs rounded-lg transition-all";
+    const inactiveClass = "text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors px-2.5 py-1 text-xs font-semibold rounded-lg";
+
     return (
         <div
-            className={`inline-flex items-center rounded-xl border border-slate-700 bg-slate-800/80 p-0.5 text-xs shadow-sm dark:border-slate-700 dark:bg-slate-800/80 border-slate-300 bg-slate-100 ${className}`}
+            className={`bg-slate-200/80 dark:bg-slate-800/80 border border-slate-300/80 dark:border-slate-700 p-1 rounded-xl flex items-center gap-1 ${className}`}
             role="group"
             aria-label="Language selector"
         >
             <button
                 type="button"
                 onClick={() => setLanguage('en')}
-                className={`rounded-lg px-2.5 py-1 font-bold transition-all duration-150 ${
-                    language === 'en'
-                        ? 'bg-indigo-600 text-white shadow-sm'
-                        : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
-                }`}
+                className={language === 'en' ? activeClass : inactiveClass}
             >
                 EN
             </button>
             <button
                 type="button"
                 onClick={() => setLanguage('mm')}
-                className={`rounded-lg px-2.5 py-1 font-bold transition-all duration-150 font-sans ${
-                    language === 'mm'
-                        ? 'bg-indigo-600 text-white shadow-sm'
-                        : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
-                }`}
+                className={`${language === 'mm' ? activeClass : inactiveClass} font-sans`}
             >
                 မြန်မာ
             </button>

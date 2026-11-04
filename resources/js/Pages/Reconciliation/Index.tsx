@@ -301,10 +301,10 @@ export default function Index({ metrics, matches, suspenseItems, filters }: Prop
             header={
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div>
-                        <h2 className="text-xl font-bold leading-tight text-white flex items-center gap-2">
+                        <h2 className="text-xl font-bold leading-tight text-slate-900 dark:text-white flex items-center gap-2">
                             <span>⚖️</span> 3-Way Reconciliation & Fraud Resolution Workbench
                         </h2>
-                        <p className="text-xs text-slate-400 mt-1">
+                        <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
                             Triangulates Invoices ↔ Slip OCR Extracted Receipts ↔ Bank Statement CSV Ledgers
                         </p>
                     </div>
@@ -314,7 +314,7 @@ export default function Index({ metrics, matches, suspenseItems, filters }: Prop
                         <select
                             value={runChannel}
                             onChange={(e) => setRunChannel(e.target.value)}
-                            className="rounded-xl border border-slate-700 bg-slate-800/80 px-3 py-1.5 text-xs text-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                            className="rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/80 px-3 py-1.5 text-xs text-slate-900 dark:text-slate-200 focus:border-[#705CF6] focus:ring-1 focus:ring-[#705CF6]"
                         >
                             <option value="all">⚡ All Myanmar Channels</option>
                             <option value="kbzpay">KBZPay Only</option>
@@ -325,7 +325,7 @@ export default function Index({ metrics, matches, suspenseItems, filters }: Prop
 
                         <Link
                             href={route('admin.audit-report')}
-                            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-800 px-3.5 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-700 hover:text-white transition shadow-sm"
+                            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white transition shadow-sm"
                         >
                             <span>📄</span> PDF Audit Report
                         </Link>
@@ -360,87 +360,69 @@ export default function Index({ metrics, matches, suspenseItems, filters }: Prop
         >
             <Head title="3-Way Reconciliation Workbench" />
 
-            <div className="py-6 space-y-6">
-                {/* Flash Messages */}
-                {flash.success && (
-                    <div className="rounded-xl border border-emerald-500/30 bg-emerald-950/40 p-4 text-sm text-emerald-200 flex items-start justify-between shadow-lg backdrop-blur">
-                        <div className="flex items-center gap-2">
-                            <span className="text-emerald-400 text-lg">✓</span>
-                            <span>{flash.success}</span>
-                        </div>
-                    </div>
-                )}
-                {flash.error && (
-                    <div className="rounded-xl border border-red-500/30 bg-red-950/40 p-4 text-sm text-red-200 flex items-start justify-between shadow-lg backdrop-blur">
-                        <div className="flex items-center gap-2">
-                            <span className="text-red-400 text-lg">⚠️</span>
-                            <span>{flash.error}</span>
-                        </div>
-                    </div>
-                )}
-
-                {/* Top Financial Summary Cards */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full space-y-6">
+                {/* Top Financial Summary Cards (FinSet Elevated Style) */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                     {/* Rate */}
-                    <div className="rounded-xl border border-slate-800 bg-slate-850/60 p-4 backdrop-blur shadow-sm">
-                        <div className="text-xs font-medium text-slate-400 uppercase tracking-wider">Reconciliation Rate</div>
-                        <div className="text-2xl font-black text-emerald-400 mt-1">
+                    <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-[#161B26] p-5 shadow-sm">
+                        <div className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Reconciliation Rate</div>
+                        <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-2">
                             {metrics.reconciliation_rate}%
                         </div>
-                        <div className="w-full bg-slate-800 rounded-full h-1.5 mt-2">
+                        <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 mt-2.5 overflow-hidden">
                             <div
                                 className="bg-emerald-500 h-1.5 rounded-full"
                                 style={{ width: `${Math.min(100, metrics.reconciliation_rate)}%` }}
                             ></div>
                         </div>
-                        <div className="text-[11px] text-slate-500 mt-1">
+                        <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-2">
                             {metrics.reconciled_invoices} of {metrics.total_invoices} invoices settled
                         </div>
                     </div>
 
                     {/* Auto-Approved Volume */}
-                    <div className="rounded-xl border border-slate-800 bg-slate-850/60 p-4 backdrop-blur shadow-sm">
-                        <div className="text-xs font-medium text-slate-400 uppercase tracking-wider">Reconciled Volume</div>
-                        <div className="text-2xl font-black text-indigo-400 mt-1">
+                    <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-[#161B26] p-5 shadow-sm">
+                        <div className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Reconciled Volume</div>
+                        <div className="text-2xl font-black text-[#705CF6] dark:text-[#8C7CFF] mt-2 font-mono">
                             {metrics.formatted_auto_approved_volume} <span className="text-xs text-slate-400 font-normal">MMK</span>
                         </div>
-                        <div className="text-[11px] text-slate-500 mt-2">Verified bank settlements</div>
+                        <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-2">Verified bank settlements</div>
                     </div>
 
                     {/* Pending Fuzzy Reviews */}
-                    <div className="rounded-xl border border-slate-800 bg-slate-850/60 p-4 backdrop-blur shadow-sm">
-                        <div className="text-xs font-medium text-slate-400 uppercase tracking-wider">Fuzzy Reviews Needed</div>
-                        <div className={`text-2xl font-black mt-1 ${metrics.pending_reviews_count > 0 ? 'text-amber-400' : 'text-slate-300'}`}>
+                    <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-[#161B26] p-5 shadow-sm">
+                        <div className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Fuzzy Reviews Needed</div>
+                        <div className={`text-2xl font-black mt-2 ${metrics.pending_reviews_count > 0 ? 'text-amber-500' : 'text-slate-700 dark:text-slate-300'}`}>
                             {metrics.pending_reviews_count}
                         </div>
-                        <div className="text-[11px] text-slate-500 mt-2">OCR typo candidate matches</div>
+                        <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-2">OCR typo candidate matches</div>
                     </div>
 
                     {/* Fraud Alerts Caught */}
-                    <div className="rounded-xl border border-slate-800 bg-slate-850/60 p-4 backdrop-blur shadow-sm">
-                        <div className="text-xs font-medium text-slate-400 uppercase tracking-wider">Fraud Alerts Caught</div>
-                        <div className={`text-2xl font-black mt-1 ${metrics.fraud_alerts_count > 0 ? 'text-red-400' : 'text-slate-300'}`}>
+                    <div className="rounded-2xl border border-rose-200/80 dark:border-rose-900/40 bg-white dark:bg-[#161B26] p-5 shadow-sm">
+                        <div className="text-xs font-bold text-rose-500 dark:text-rose-400 uppercase tracking-wider">Fraud Alerts Caught</div>
+                        <div className={`text-2xl font-black mt-2 ${metrics.fraud_alerts_count > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-700 dark:text-slate-300'}`}>
                             {metrics.fraud_alerts_count}
                         </div>
-                        <div className="text-[11px] text-slate-500 mt-2">Tampered & duplicate slips</div>
+                        <div className="text-[11px] text-rose-500/80 dark:text-rose-400/80 mt-2">Tampered & duplicate slips</div>
                     </div>
 
                     {/* Suspense Balance */}
-                    <div className="rounded-xl border border-slate-800 bg-slate-850/60 p-4 backdrop-blur shadow-sm">
-                        <div className="text-xs font-medium text-slate-400 uppercase tracking-wider">Suspense Ledger</div>
-                        <div className="text-2xl font-black text-orange-400 mt-1">
+                    <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-[#161B26] p-5 shadow-sm">
+                        <div className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Suspense Ledger</div>
+                        <div className="text-2xl font-black text-amber-600 dark:text-amber-400 mt-2 font-mono">
                             {metrics.formatted_suspense_volume} <span className="text-xs text-slate-400 font-normal">MMK</span>
                         </div>
-                        <div className="text-[11px] text-slate-500 mt-2">
+                        <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-2">
                             {metrics.suspense_txns_count} unclaimed bank receipts
                         </div>
                     </div>
                 </div>
 
                 {/* Audit Feed & Workbench */}
-                <div className="rounded-2xl border border-slate-800 bg-slate-850/60 p-6 backdrop-blur shadow-xl space-y-4">
+                <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-[#161B26] p-6 shadow-sm space-y-4">
                     {/* Filter Tabs */}
-                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 border-b border-slate-800 pb-4">
+                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 border-b border-slate-100 dark:border-slate-800/80 pb-4">
                         <div className="flex flex-wrap items-center gap-1.5">
                             {[
                                 { id: 'all', label: 'All Audit Records' },
@@ -456,10 +438,10 @@ export default function Index({ metrics, matches, suspenseItems, filters }: Prop
                                         setCurrentTab(tab.id);
                                         handleFilterSubmit(tab.id, currentChannel, searchTerm);
                                     }}
-                                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+                                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${
                                         currentTab === tab.id
-                                            ? 'bg-indigo-600 text-white shadow'
-                                            : 'bg-slate-900 text-slate-400 hover:bg-slate-800 hover:text-slate-200 border border-slate-800'
+                                            ? 'bg-[#705CF6] text-white shadow-sm'
+                                            : 'bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200 border border-slate-200 dark:border-slate-800'
                                     }`}
                                 >
                                     {tab.label}
@@ -475,7 +457,7 @@ export default function Index({ metrics, matches, suspenseItems, filters }: Prop
                                     setCurrentChannel(e.target.value);
                                     handleFilterSubmit(currentTab, e.target.value, searchTerm);
                                 }}
-                                className="rounded-xl border border-slate-700 bg-slate-900 px-3 py-1.5 text-xs text-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                                className="rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-1.5 text-xs text-slate-900 dark:text-slate-200 focus:border-[#705CF6] focus:ring-1 focus:ring-[#705CF6]"
                             >
                                 <option value="all">All Channels</option>
                                 <option value="kbzpay">KBZPay</option>
@@ -495,7 +477,7 @@ export default function Index({ metrics, matches, suspenseItems, filters }: Prop
                                             handleFilterSubmit(currentTab, currentChannel, searchTerm);
                                         }
                                     }}
-                                    className="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                                    className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-1.5 text-xs text-slate-900 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:border-[#705CF6] focus:ring-1 focus:ring-[#705CF6]"
                                 />
                                 {searchTerm && (
                                     <button
@@ -504,7 +486,7 @@ export default function Index({ metrics, matches, suspenseItems, filters }: Prop
                                             setSearchTerm('');
                                             handleFilterSubmit(currentTab, currentChannel, '');
                                         }}
-                                        className="absolute right-2.5 top-2 text-xs text-slate-500 hover:text-slate-300"
+                                        className="absolute right-2.5 top-2 text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
                                     >
                                         ✕
                                     </button>
@@ -517,16 +499,16 @@ export default function Index({ metrics, matches, suspenseItems, filters }: Prop
                     {currentTab === 'suspense' ? (
                         // Suspense Ledger View
                         <div className="space-y-4">
-                            <div className="p-3 rounded-xl bg-orange-950/20 border border-orange-800/40 text-xs text-orange-200 flex items-center justify-between">
+                            <div className="p-3 rounded-xl bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-800/40 text-xs text-orange-800 dark:text-orange-200 flex items-center justify-between">
                                 <div>
                                     <span className="font-bold">⚠️ Suspense Bank Ledger:</span> Bank transactions that have cleared in official bank statements but have no corresponding customer invoice/slip uploaded.
                                 </div>
-                                <span className="font-mono text-orange-400 font-bold">{suspenseItems.total} Unclaimed Deposits</span>
+                                <span className="font-mono text-orange-600 dark:text-orange-400 font-bold">{suspenseItems.total} Unclaimed Deposits</span>
                             </div>
 
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left text-xs">
-                                    <thead className="bg-slate-900/80 text-slate-400 border-b border-slate-800 uppercase tracking-wider font-semibold">
+                                    <thead className="bg-slate-50 dark:bg-slate-900/80 text-slate-700 dark:text-slate-300 border-b border-slate-200 dark:border-slate-800 uppercase tracking-wider font-semibold">
                                         <tr>
                                             <th className="px-4 py-3">Channel</th>
                                             <th className="px-4 py-3">Bank Transaction ID</th>
@@ -539,7 +521,7 @@ export default function Index({ metrics, matches, suspenseItems, filters }: Prop
                                             <th className="px-4 py-3">Status</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-slate-800">
+                                    <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
                                         {suspenseItems.data.length === 0 ? (
                                             <tr>
                                                 <td colSpan={9} className="px-4 py-8 text-center text-slate-500">
@@ -548,20 +530,20 @@ export default function Index({ metrics, matches, suspenseItems, filters }: Prop
                                             </tr>
                                         ) : (
                                             suspenseItems.data.map((item) => (
-                                                <tr key={item.id} className="hover:bg-slate-800/40 transition">
+                                                <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
                                                     <td className="px-4 py-3">{getChannelTag(item.payment_channel)}</td>
-                                                    <td className="px-4 py-3 font-mono font-bold text-slate-200">{item.bank_transaction_id}</td>
-                                                    <td className="px-4 py-3 text-slate-400">{item.transaction_datetime}</td>
+                                                    <td className="px-4 py-3 font-mono font-bold text-slate-900 dark:text-slate-200">{item.bank_transaction_id}</td>
+                                                    <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{item.transaction_datetime}</td>
                                                     <td className="px-4 py-3">
-                                                        <div className="text-slate-200 font-semibold">{item.sender_name || '—'}</div>
-                                                        <div className="text-[11px] text-slate-400 font-mono">{item.sender_phone || '—'}</div>
+                                                        <div className="text-slate-900 dark:text-slate-200 font-semibold">{item.sender_name || '—'}</div>
+                                                        <div className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">{item.sender_phone || '—'}</div>
                                                     </td>
-                                                    <td className="px-4 py-3 text-right font-mono text-slate-200">{formatMmk(item.gross_amount)}</td>
-                                                    <td className="px-4 py-3 text-right font-mono text-amber-400">{formatMmk(item.fee_amount)}</td>
-                                                    <td className="px-4 py-3 text-right font-mono font-bold text-emerald-400">{formatMmk(item.net_amount)}</td>
-                                                    <td className="px-4 py-3 text-slate-300 max-w-xs truncate">{item.reference_note || '—'}</td>
+                                                    <td className="px-4 py-3 text-right font-mono text-slate-700 dark:text-slate-200">{formatMmk(item.gross_amount)}</td>
+                                                    <td className="px-4 py-3 text-right font-mono text-amber-600 dark:text-amber-400">{formatMmk(item.fee_amount)}</td>
+                                                    <td className="px-4 py-3 text-right font-mono font-bold text-emerald-600 dark:text-emerald-400">{formatMmk(item.net_amount)}</td>
+                                                    <td className="px-4 py-3 text-slate-700 dark:text-slate-300 max-w-xs truncate">{item.reference_note || '—'}</td>
                                                     <td className="px-4 py-3">
-                                                        <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-orange-950 text-orange-400 border border-orange-800">
+                                                        <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-orange-100 dark:bg-orange-950 text-orange-700 dark:text-orange-400 border border-orange-200 dark:border-orange-800">
                                                             Suspense
                                                         </span>
                                                     </td>
@@ -576,7 +558,7 @@ export default function Index({ metrics, matches, suspenseItems, filters }: Prop
                         // Standard Reconciliation Matches Table
                         <div className="overflow-x-auto">
                             <table className="w-full text-left text-xs">
-                                <thead className="bg-slate-900/80 text-slate-400 border-b border-slate-800 uppercase tracking-wider font-semibold">
+                                <thead className="bg-slate-50 dark:bg-slate-900/80 text-slate-700 dark:text-slate-300 border-b border-slate-200 dark:border-slate-800 uppercase tracking-wider font-semibold">
                                     <tr>
                                         <th className="px-4 py-3">Match Type</th>
                                         <th className="px-4 py-3">Invoice Details</th>
@@ -587,7 +569,7 @@ export default function Index({ metrics, matches, suspenseItems, filters }: Prop
                                         <th className="px-4 py-3 text-right">Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-slate-800">
+                                <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
                                     {matches.data.length === 0 ? (
                                         <tr>
                                             <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
@@ -596,12 +578,12 @@ export default function Index({ metrics, matches, suspenseItems, filters }: Prop
                                         </tr>
                                     ) : (
                                         matches.data.map((m) => (
-                                            <tr key={m.id} className="hover:bg-slate-800/40 transition">
+                                            <tr key={m.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
                                                 {/* Match Type */}
                                                 <td className="px-4 py-3">
                                                     <div className="space-y-1">
                                                         {getMatchBadge(m.match_type)}
-                                                        <div className="text-[11px] text-slate-400 font-mono">
+                                                        <div className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
                                                             Confidence: {m.confidence_score}%
                                                         </div>
                                                     </div>
@@ -611,17 +593,17 @@ export default function Index({ metrics, matches, suspenseItems, filters }: Prop
                                                 <td className="px-4 py-3">
                                                     {m.invoice ? (
                                                         <div>
-                                                            <div className="font-bold text-white flex items-center gap-1.5">
+                                                            <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                                                                 <span>{m.invoice.invoice_number}</span>
                                                                 {getChannelTag(m.invoice.expected_channel)}
                                                             </div>
-                                                            <div className="text-[11px] text-slate-300 font-medium">{m.invoice.customer_name}</div>
-                                                            <div className="text-[11px] text-indigo-400 font-mono font-bold">
+                                                            <div className="text-[11px] text-slate-700 dark:text-slate-300 font-medium">{m.invoice.customer_name}</div>
+                                                            <div className="text-[11px] text-[#705CF6] dark:text-indigo-400 font-mono font-bold">
                                                                 {formatMmk(m.invoice.amount)} MMK
                                                             </div>
                                                         </div>
                                                     ) : (
-                                                        <span className="text-slate-500 italic">No Invoice Linked</span>
+                                                        <span className="text-slate-400 italic">No Invoice Linked</span>
                                                     )}
                                                 </td>
 
@@ -629,20 +611,20 @@ export default function Index({ metrics, matches, suspenseItems, filters }: Prop
                                                 <td className="px-4 py-3">
                                                     {m.payment_slip ? (
                                                         <div>
-                                                            <div className="font-mono text-slate-200 font-semibold truncate max-w-[140px]" title={m.payment_slip.extracted_transaction_id}>
+                                                            <div className="font-mono text-slate-800 dark:text-slate-200 font-semibold truncate max-w-[140px]" title={m.payment_slip.extracted_transaction_id}>
                                                                 {m.payment_slip.extracted_transaction_id || 'No ID Extracted'}
                                                             </div>
-                                                            <div className="text-[11px] text-emerald-400 font-mono">
+                                                            <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-mono">
                                                                 {formatMmk(m.payment_slip.extracted_amount)} MMK
                                                             </div>
                                                             {m.payment_slip.exif_tamper_flag && (
-                                                                <span className="inline-block mt-0.5 px-1.5 py-0.2 rounded bg-red-950 text-red-400 text-[10px] font-bold border border-red-800">
+                                                                <span className="inline-block mt-0.5 px-1.5 py-0.2 rounded bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-400 text-[10px] font-bold border border-red-300 dark:border-red-800">
                                                                     ⚠️ Tampered
                                                                 </span>
                                                             )}
                                                         </div>
                                                     ) : (
-                                                        <span className="text-slate-500 italic">No Slip</span>
+                                                        <span className="text-slate-400 italic">No Slip</span>
                                                     )}
                                                 </td>
 
@@ -650,31 +632,31 @@ export default function Index({ metrics, matches, suspenseItems, filters }: Prop
                                                 <td className="px-4 py-3">
                                                     {m.bank_transaction ? (
                                                         <div>
-                                                            <div className="font-mono text-slate-200 font-semibold truncate max-w-[140px]" title={m.bank_transaction.bank_transaction_id}>
+                                                            <div className="font-mono text-slate-800 dark:text-slate-200 font-semibold truncate max-w-[140px]" title={m.bank_transaction.bank_transaction_id}>
                                                                 {m.bank_transaction.bank_transaction_id}
                                                             </div>
-                                                            <div className="text-[11px] text-slate-300">
-                                                                Gross: <span className="font-mono text-emerald-400">{formatMmk(m.bank_transaction.gross_amount)} MMK</span>
+                                                            <div className="text-[11px] text-slate-700 dark:text-slate-300">
+                                                                Gross: <span className="font-mono text-emerald-600 dark:text-emerald-400">{formatMmk(m.bank_transaction.gross_amount)} MMK</span>
                                                             </div>
                                                             {parseFloat(String(m.bank_transaction.fee_amount)) > 0 && (
-                                                                <div className="text-[10px] text-amber-400 font-mono">
+                                                                <div className="text-[10px] text-amber-600 dark:text-amber-400 font-mono">
                                                                     Fee: -{formatMmk(m.bank_transaction.fee_amount)} MMK
                                                                 </div>
                                                             )}
                                                         </div>
                                                     ) : (
-                                                        <span className="text-slate-500 italic">No Bank Record</span>
+                                                        <span className="text-slate-400 italic">No Bank Record</span>
                                                     )}
                                                 </td>
 
                                                 {/* Variance */}
                                                 <td className="px-4 py-3 text-right">
                                                     {parseFloat(String(m.variance_amount)) > 0 ? (
-                                                        <span className="font-mono font-bold text-red-400">
+                                                        <span className="font-mono font-bold text-red-600 dark:text-red-400">
                                                             +{formatMmk(m.variance_amount)} MMK
                                                         </span>
                                                     ) : (
-                                                        <span className="font-mono text-slate-500">0.00</span>
+                                                        <span className="font-mono text-slate-400">0.00</span>
                                                     )}
                                                 </td>
 
@@ -688,7 +670,7 @@ export default function Index({ metrics, matches, suspenseItems, filters }: Prop
                                                     <button
                                                         type="button"
                                                         onClick={() => setActiveCompareMatch(m)}
-                                                        className="inline-flex items-center gap-1 rounded-lg border border-slate-700 bg-slate-800 px-2.5 py-1 text-xs font-semibold text-slate-200 hover:bg-slate-700 hover:text-white transition shadow-sm"
+                                                        className="inline-flex items-center gap-1 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white transition shadow-sm"
                                                     >
                                                         <span>🔍</span> Compare 3-Way
                                                     </button>
@@ -703,8 +685,8 @@ export default function Index({ metrics, matches, suspenseItems, filters }: Prop
 
                     {/* Pagination */}
                     {matches.links && matches.links.length > 3 && currentTab !== 'suspense' && (
-                        <div className="flex items-center justify-between border-t border-slate-800 pt-4 mt-2 text-xs">
-                            <span className="text-slate-400">
+                        <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-800/80 pt-4 mt-2 text-xs">
+                            <span className="text-slate-600 dark:text-slate-400">
                                 Page {matches.current_page} of {matches.last_page} ({matches.total} records)
                             </span>
                             <div className="flex items-center gap-1">
@@ -715,12 +697,12 @@ export default function Index({ metrics, matches, suspenseItems, filters }: Prop
                                         preserveScroll
                                         preserveState
                                         dangerouslySetInnerHTML={{ __html: link.label }}
-                                        className={`px-3 py-1 rounded-lg border ${
+                                        className={`px-3 py-1 rounded-xl border ${
                                             link.active
-                                                ? 'bg-indigo-600 border-indigo-500 text-white font-bold'
+                                                ? 'bg-[#705CF6] border-[#705CF6] text-white font-bold'
                                                 : link.url
-                                                ? 'border-slate-800 bg-slate-900 text-slate-300 hover:bg-slate-800'
-                                                : 'border-slate-800 bg-slate-900/50 text-slate-600 cursor-not-allowed'
+                                                ? 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                                                : 'border-slate-200 dark:border-slate-800 bg-slate-100/50 dark:bg-slate-900/50 text-slate-400 cursor-not-allowed'
                                         }`}
                                     />
                                 ))}

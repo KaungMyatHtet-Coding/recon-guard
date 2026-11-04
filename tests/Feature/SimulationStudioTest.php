@@ -29,7 +29,7 @@ class SimulationStudioTest extends TestCase
 
     public function test_customer_cannot_access_simulation_studio(): void
     {
-        $customer = User::where('email', 'customer1@reconguard.test')->firstOrFail();
+        $customer = User::where('email', 'customer@reconguard.test')->firstOrFail();
         $response = $this->actingAs($customer)->get('/simulation-studio');
         $response->assertForbidden();
     }
@@ -133,7 +133,19 @@ class SimulationStudioTest extends TestCase
     {
         Storage::fake('public');
         $admin = User::where('email', 'admin@reconguard.test')->firstOrFail();
-        $invoice = Invoice::firstOrFail();
+        $customer = User::where('email', 'customer@reconguard.test')->firstOrFail();
+
+        $invoice = Invoice::create([
+            'invoice_number' => 'INV-INJECT-TEST-001',
+            'user_id' => $customer->id,
+            'customer_name' => $customer->name,
+            'customer_phone' => $customer->phone,
+            'description' => 'Test Hardware Purchase',
+            'amount' => 500000.00,
+            'expected_channel' => 'kbzpay',
+            'status' => 'unpaid',
+            'due_date' => now()->addDays(7),
+        ]);
 
         $response = $this->actingAs($admin)->post('/simulation-studio/inject-slip', [
             'invoice_id' => $invoice->id,

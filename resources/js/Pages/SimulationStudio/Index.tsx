@@ -148,13 +148,10 @@ export default function SimulationStudio({
             header={
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
-                        <h2 className="text-xl font-bold leading-tight text-white flex items-center space-x-2">
-                            <span>Synthetic Dataset & Mock Slip Simulation Studio</span>
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-purple-950 text-purple-300 border border-purple-700">
-                                Phase 2 Studio
-                            </span>
+                        <h2 className="text-xl font-bold leading-tight text-slate-900 dark:text-white">
+                            Synthetic Dataset & Mock Slip Simulation Studio
                         </h2>
-                        <p className="text-xs text-slate-400 mt-1">
+                        <p className="text-xs text-slate-700 dark:text-slate-400 mt-1">
                             Generate thousands of realistic Myanmar transactions, download native bank CSVs, and simulate Photoshopped fraud slips
                         </p>
                     </div>
@@ -163,7 +160,7 @@ export default function SimulationStudio({
                         <button
                             type="button"
                             onClick={() => setShowResetModal(true)}
-                            className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-700 transition"
+                            className="inline-flex items-center px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/80 dark:hover:bg-rose-900 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-700 transition shadow-sm"
                         >
                             <svg className="w-4 h-4 me-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -178,70 +175,70 @@ export default function SimulationStudio({
 
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-8">
                 {/* System Telemetry Stats */}
-                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-                    <div className="p-3 rounded-lg bg-slate-800/60 border border-slate-700/60 text-center">
-                        <div className="text-xs text-slate-400">Total Invoices</div>
-                        <div className="text-lg font-bold text-white mt-1">{counts.invoices}</div>
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+                    <div className="bg-white dark:bg-[#161B26] border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm text-center">
+                        <div className="text-slate-600 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">Total Invoices</div>
+                        <div className="text-slate-900 dark:text-white font-bold text-2xl mt-1">{counts.invoices}</div>
                     </div>
-                    <div className="p-3 rounded-lg bg-slate-800/60 border border-slate-700/60 text-center">
-                        <div className="text-xs text-slate-400">Payment Slips</div>
-                        <div className="text-lg font-bold text-sky-400 mt-1">{counts.slips}</div>
+                    <div className="bg-white dark:bg-[#161B26] border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm text-center">
+                        <div className="text-slate-600 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">Payment Slips</div>
+                        <div className="text-slate-900 dark:text-white font-bold text-2xl mt-1">{counts.slips}</div>
                     </div>
-                    <div className="p-3 rounded-lg bg-slate-800/60 border border-slate-700/60 text-center">
-                        <div className="text-xs text-slate-400">Bank Rows</div>
-                        <div className="text-lg font-bold text-emerald-400 mt-1">{counts.bank_txns}</div>
+                    <div className="bg-white dark:bg-[#161B26] border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm text-center">
+                        <div className="text-slate-600 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">Bank Rows</div>
+                        <div className="text-slate-900 dark:text-white font-bold text-2xl mt-1">{counts.bank_txns}</div>
                     </div>
-                    <div className="p-3 rounded-lg bg-slate-800/60 border border-slate-700/60 text-center">
-                        <div className="text-xs text-slate-400">Statement Batches</div>
-                        <div className="text-lg font-bold text-amber-400 mt-1">{counts.batches}</div>
+                    <div className="bg-white dark:bg-[#161B26] border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm text-center">
+                        <div className="text-slate-600 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">Statement Batches</div>
+                        <div className="text-slate-900 dark:text-white font-bold text-2xl mt-1">{counts.batches}</div>
                     </div>
-                    <div className="p-3 rounded-lg bg-slate-800/60 border border-slate-700/60 text-center col-span-2 sm:col-span-1">
-                        <div className="text-xs text-slate-400">Reconciliations</div>
-                        <div className="text-lg font-bold text-indigo-400 mt-1">{counts.matches}</div>
+                    <div className="bg-white dark:bg-[#161B26] border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm text-center col-span-2 sm:col-span-1">
+                        <div className="text-slate-600 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">Reconciliations</div>
+                        <div className="text-slate-900 dark:text-white font-bold text-2xl mt-1">{counts.matches}</div>
                     </div>
                 </div>
 
                 {/* Panel A: Bulk Dataset & Bank CSV Generator */}
-                <div className="rounded-xl border border-slate-800 bg-slate-800/40 p-6 backdrop-blur">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between pb-4 border-b border-slate-800 gap-4">
+                <div className="bg-white dark:bg-[#161B26] border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800 gap-4">
                         <div>
-                            <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                                <span className="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-400">
+                            <h3 className="text-slate-900 dark:text-white font-bold text-lg flex items-center gap-2">
+                                <span className="p-1.5 rounded-xl bg-[#705CF6]/10 text-[#705CF6]">
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                                     </svg>
                                 </span>
                                 Panel A: Bulk Dataset & Official Bank CSV Generator
                             </h3>
-                            <p className="text-xs text-slate-400 mt-1">
+                            <p className="text-slate-600 dark:text-slate-400 text-sm mt-1">
                                 Inject large-scale synthetic test batches with controlled anomalies (80% Exact, 8% Fee, 5% Fuzzy, 4% Fraud, 3% Suspense)
                             </p>
                         </div>
 
                         {/* Direct Channel CSV Download Quick Actions */}
                         <div className="flex flex-wrap items-center gap-2">
-                            <span className="text-xs text-slate-400 me-1">Export CSVs:</span>
+                            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 me-1">Export CSVs:</span>
                             <a
                                 href={route('simulation-studio.download-csv', { channel: 'kbzpay' })}
-                                className="px-2.5 py-1 text-xs font-semibold rounded bg-blue-950 text-blue-300 hover:bg-blue-900 border border-blue-700/60 transition"
+                                className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900 border border-blue-200 dark:border-blue-700/60 transition"
                             >
                                 ↓ KBZPay.csv
                             </a>
                             <a
                                 href={route('simulation-studio.download-csv', { channel: 'wavepay' })}
-                                className="px-2.5 py-1 text-xs font-semibold rounded bg-yellow-950 text-yellow-300 hover:bg-yellow-900 border border-yellow-700/60 transition"
+                                className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900 border border-amber-200 dark:border-amber-700/60 transition"
                             >
                                 ↓ WavePay.csv
                             </a>
                             <a
                                 href={route('simulation-studio.download-csv', { channel: 'cbpay' })}
-                                className="px-2.5 py-1 text-xs font-semibold rounded bg-orange-950 text-orange-300 hover:bg-orange-900 border border-orange-700/60 transition"
+                                className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-rose-50 dark:bg-rose-950 text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900 border border-rose-200 dark:border-rose-700/60 transition"
                             >
                                 ↓ CBPay.csv
                             </a>
                             <a
                                 href={route('simulation-studio.download-csv', { channel: 'ayapay' })}
-                                className="px-2.5 py-1 text-xs font-semibold rounded bg-red-950 text-red-300 hover:bg-red-900 border border-red-700/60 transition"
+                                className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-purple-50 dark:bg-purple-950 text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900 border border-purple-200 dark:border-purple-700/60 transition"
                             >
                                 ↓ AYAPay.csv
                             </a>
@@ -250,13 +247,13 @@ export default function SimulationStudio({
 
                     <form onSubmit={handleBulkGenerate} className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
                         <div>
-                            <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                            <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1.5">
                                 Batch Dataset Size
                             </label>
                             <select
                                 value={bulkData.size}
                                 onChange={(e) => setBulkData('size', parseInt(e.target.value))}
-                                className="w-full rounded-lg bg-slate-900 border border-slate-700 text-sm text-white focus:border-indigo-500 focus:ring-indigo-500"
+                                className="w-full rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-sm text-slate-900 dark:text-white focus:border-[#705CF6] focus:ring-[#705CF6]"
                             >
                                 <option value={50}>50 Transactions (Quick Test)</option>
                                 <option value={200}>200 Transactions (Balanced Demo)</option>
@@ -266,13 +263,13 @@ export default function SimulationStudio({
                         </div>
 
                         <div>
-                            <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                            <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1.5">
                                 Target Channel
                             </label>
                             <select
                                 value={bulkData.channel}
                                 onChange={(e) => setBulkData('channel', e.target.value)}
-                                className="w-full rounded-lg bg-slate-900 border border-slate-700 text-sm text-white focus:border-indigo-500 focus:ring-indigo-500"
+                                className="w-full rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-sm text-slate-900 dark:text-white focus:border-[#705CF6] focus:ring-[#705CF6]"
                             >
                                 <option value="all">All 4 Channels (KBZPay, Wave, CB, AYA)</option>
                                 <option value="kbzpay">KBZPay Only</option>
@@ -286,7 +283,7 @@ export default function SimulationStudio({
                             <button
                                 type="submit"
                                 disabled={bulkProcessing}
-                                className="w-full py-2.5 px-4 rounded-lg bg-indigo-600 hover:bg-indigo-500 font-semibold text-sm text-white shadow-lg shadow-indigo-600/30 transition disabled:opacity-50 flex items-center justify-center gap-2"
+                                className="w-full py-2.5 px-4 rounded-xl bg-[#705CF6] hover:bg-[#5f4be3] font-semibold text-sm text-white shadow-sm transition disabled:opacity-50 flex items-center justify-center gap-2"
                             >
                                 {bulkProcessing ? (
                                     <>
@@ -310,17 +307,17 @@ export default function SimulationStudio({
                 </div>
 
                 {/* Panel B: Interactive Mock Slip Forgery & Legit Receipt Lab */}
-                <div className="rounded-xl border border-slate-800 bg-slate-800/40 p-6 backdrop-blur">
-                    <div className="pb-4 border-b border-slate-800">
-                        <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                            <span className="p-1.5 rounded-lg bg-purple-500/10 text-purple-400">
+                <div className="bg-white dark:bg-[#161B26] border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
+                    <div className="pb-4 border-b border-slate-200 dark:border-slate-800">
+                        <h3 className="text-slate-900 dark:text-white font-bold text-lg flex items-center gap-2">
+                            <span className="p-1.5 rounded-xl bg-purple-500/10 text-[#705CF6]">
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                 </svg>
                             </span>
                             Panel B: Interactive Mock Slip Forgery & Legit Receipt Lab
                         </h3>
-                        <p className="text-xs text-slate-400 mt-1">
+                        <p className="text-slate-600 dark:text-slate-400 text-sm mt-1">
                             Simulate genuine receipts or forged payment slips (Photoshop inflated amount, duplicate TXN ID) and test fraud detection
                         </p>
                     </div>
@@ -329,13 +326,13 @@ export default function SimulationStudio({
                         {/* Configuration Controls */}
                         <div className="lg:col-span-6 space-y-4">
                             <div>
-                                <label className="block text-xs font-medium text-slate-300 mb-1">
+                                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
                                     Select Unpaid / Pending Invoice
                                 </label>
                                 <select
                                     value={selectedInvoiceId}
                                     onChange={(e) => setSelectedInvoiceId(parseInt(e.target.value))}
-                                    className="w-full rounded-lg bg-slate-900 border border-slate-700 text-sm text-white focus:border-indigo-500 focus:ring-indigo-500"
+                                    className="w-full rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-sm text-slate-900 dark:text-white focus:border-[#705CF6] focus:ring-[#705CF6]"
                                 >
                                     {invoices.map((inv) => (
                                         <option key={inv.id} value={inv.id}>
@@ -347,13 +344,13 @@ export default function SimulationStudio({
 
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-xs font-medium text-slate-300 mb-1">
+                                    <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
                                         Wallet Channel Style
                                     </label>
                                     <select
                                         value={channel}
                                         onChange={(e) => setChannel(e.target.value as any)}
-                                        className="w-full rounded-lg bg-slate-900 border border-slate-700 text-sm text-white focus:border-indigo-500 focus:ring-indigo-500"
+                                        className="w-full rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-sm text-slate-900 dark:text-white focus:border-[#705CF6] focus:ring-[#705CF6]"
                                     >
                                         <option value="kbzpay">KBZPay (KPay)</option>
                                         <option value="wavepay">WavePay</option>
@@ -363,13 +360,13 @@ export default function SimulationStudio({
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-medium text-slate-300 mb-1">
+                                    <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
                                         Simulation Mode
                                     </label>
                                     <select
                                         value={mode}
                                         onChange={(e) => setMode(e.target.value as any)}
-                                        className="w-full rounded-lg bg-slate-900 border border-slate-700 text-sm text-white focus:border-indigo-500 focus:ring-indigo-500"
+                                        className="w-full rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-sm text-slate-900 dark:text-white focus:border-[#705CF6] focus:ring-[#705CF6]"
                                     >
                                         <option value="legit">Legit Genuine Slip</option>
                                         <option value="tampered_amount">Tampered Amount (Photoshop Simulation)</option>
@@ -380,45 +377,45 @@ export default function SimulationStudio({
 
                             {/* Conditional Mode Inputs */}
                             {mode === 'tampered_amount' && (
-                                <div className="p-3.5 rounded-lg bg-rose-950/40 border border-rose-800/60 space-y-2">
-                                    <div className="text-xs font-semibold text-rose-300 flex items-center gap-1.5">
-                                        <svg className="w-4 h-4 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 space-y-2">
+                                    <div className="text-xs font-semibold text-rose-700 dark:text-rose-300 flex items-center gap-1.5">
+                                        <svg className="w-4 h-4 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                                         </svg>
                                         Tampered Slip Configuration
                                     </div>
-                                    <label className="block text-[11px] text-slate-400">
+                                    <label className="block text-[11px] text-slate-600 dark:text-slate-400">
                                         Inflated Amount Claimed on Slip (Bank row will actually record only 5,000 MMK):
                                     </label>
                                     <input
                                         type="number"
                                         value={tamperedAmount}
                                         onChange={(e) => setTamperedAmount(e.target.value)}
-                                        className="w-full rounded-lg bg-slate-900 border border-slate-700 text-sm text-white"
+                                        className="w-full rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-sm text-slate-900 dark:text-white"
                                         placeholder="500000"
                                     />
-                                    <p className="text-[10px] text-rose-400/90">
+                                    <p className="text-[10px] text-rose-600 dark:text-rose-400/90 font-medium">
                                         Injects simulated EXIF metadata: "Software: Adobe Photoshop 25.0 (Windows)" and lowers OCR confidence.
                                     </p>
                                 </div>
                             )}
 
                             {mode === 'duplicate_id' && (
-                                <div className="p-3.5 rounded-lg bg-amber-950/40 border border-amber-800/60 space-y-2">
-                                    <div className="text-xs font-semibold text-amber-300 flex items-center gap-1.5">
-                                        <svg className="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div className="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 space-y-2">
+                                    <div className="text-xs font-semibold text-amber-700 dark:text-amber-300 flex items-center gap-1.5">
+                                        <svg className="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                                         </svg>
                                         Duplicate Transaction ID Configuration
                                     </div>
-                                    <label className="block text-[11px] text-slate-400">
+                                    <label className="block text-[11px] text-slate-600 dark:text-slate-400">
                                         Reuse Existing Transaction ID:
                                     </label>
                                     <input
                                         type="text"
                                         value={duplicateTxnId}
                                         onChange={(e) => setDuplicateTxnId(e.target.value)}
-                                        className="w-full rounded-lg bg-slate-900 border border-slate-700 text-sm text-white"
+                                        className="w-full rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-sm text-slate-900 dark:text-white"
                                         placeholder="KP-20261028-984210"
                                     />
                                 </div>
@@ -430,7 +427,7 @@ export default function SimulationStudio({
                                     type="button"
                                     onClick={handleGeneratePreview}
                                     disabled={previewLoading}
-                                    className="flex-1 py-2 px-4 rounded-lg bg-slate-700 hover:bg-slate-600 font-semibold text-xs text-white border border-slate-600 transition flex items-center justify-center gap-1.5"
+                                    className="flex-1 py-2 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 font-semibold text-xs text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 transition flex items-center justify-center gap-1.5"
                                 >
                                     {previewLoading ? 'Rendering PNG...' : 'Render Live Slip Preview'}
                                 </button>
@@ -438,7 +435,7 @@ export default function SimulationStudio({
                                 <button
                                     type="button"
                                     onClick={handle1ClickInject}
-                                    className="flex-1 py-2 px-4 rounded-lg bg-emerald-600 hover:bg-emerald-500 font-semibold text-xs text-white shadow-md shadow-emerald-600/20 transition flex items-center justify-center gap-1.5"
+                                    className="flex-1 py-2 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 font-semibold text-xs text-white shadow-sm transition flex items-center justify-center gap-1.5"
                                 >
                                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
@@ -449,10 +446,10 @@ export default function SimulationStudio({
                         </div>
 
                         {/* Live Receipt Screenshot Preview Pane */}
-                        <div className="lg:col-span-6 flex flex-col items-center justify-center p-4 rounded-xl bg-slate-900/80 border border-slate-800">
+                        <div className="lg:col-span-6 flex flex-col items-center justify-center p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800">
                             {previewData ? (
                                 <div className="space-y-3 w-full max-w-sm flex flex-col items-center">
-                                    <div className="relative rounded-lg overflow-hidden border border-slate-700 shadow-2xl">
+                                    <div className="relative rounded-xl overflow-hidden border border-slate-300 dark:border-slate-700 shadow-xl">
                                         <img
                                             src={previewData.preview_url}
                                             alt="Mock Slip Preview"
@@ -464,22 +461,22 @@ export default function SimulationStudio({
                                         <a
                                             href={previewData.preview_url}
                                             download={`mock_slip_${previewData.channel}_${previewData.mode}.png`}
-                                            className="flex-1 text-center py-1.5 px-3 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white transition"
+                                            className="flex-1 text-center py-1.5 px-3 rounded-xl bg-[#705CF6] hover:bg-[#5f4be3] text-xs font-semibold text-white transition shadow-sm"
                                         >
                                             Download Slip PNG
                                         </a>
-                                        <span className="text-[10px] font-mono text-slate-400 truncate max-w-[150px]">
+                                        <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400 truncate max-w-[150px]">
                                             Hash: {previewData.image_hash.substring(0, 12)}...
                                         </span>
                                     </div>
                                 </div>
                             ) : (
-                                <div className="text-center py-12 text-slate-500 space-y-2">
-                                    <svg className="w-12 h-12 mx-auto text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div className="text-center py-12 text-slate-500 dark:text-slate-400 space-y-2">
+                                    <svg className="w-12 h-12 mx-auto text-slate-400 dark:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                     </svg>
-                                    <div className="text-xs font-medium text-slate-400">No Slip Rendered Yet</div>
-                                    <div className="text-[11px]">Click "Render Live Slip Preview" to generate high-resolution wallet receipt</div>
+                                    <div className="text-xs font-medium text-slate-700 dark:text-slate-400">No Slip Rendered Yet</div>
+                                    <div className="text-[11px] text-slate-500 dark:text-slate-400">Click "Render Live Slip Preview" to generate high-resolution wallet receipt</div>
                                 </div>
                             )}
                         </div>
@@ -487,13 +484,13 @@ export default function SimulationStudio({
                 </div>
 
                 {/* Panel C: Bank Statement Batch Archive */}
-                <div className="rounded-xl border border-slate-800 bg-slate-800/40 p-6 backdrop-blur">
-                    <h3 className="text-base font-semibold text-white mb-4">
+                <div className="bg-white dark:bg-[#161B26] border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
+                    <h3 className="text-slate-900 dark:text-white font-bold text-lg mb-4">
                         Recent Bank Statement Batches & Download Portal
                     </h3>
                     <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-slate-800 text-left text-sm">
-                            <thead className="bg-slate-900/60 text-xs uppercase tracking-wider text-slate-400 font-semibold">
+                        <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-800 text-left text-sm">
+                            <thead className="bg-slate-50 dark:bg-slate-900/60 text-xs uppercase tracking-wider text-slate-700 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-slate-800">
                                 <tr>
                                     <th className="px-6 py-3">Channel</th>
                                     <th className="px-6 py-3">Filename</th>
@@ -503,22 +500,22 @@ export default function SimulationStudio({
                                     <th className="px-6 py-3">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-800 text-slate-300">
+                            <tbody className="divide-y divide-slate-200 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
                                 {recentBatches.map((batch) => (
-                                    <tr key={batch.id} className="hover:bg-slate-800/50">
-                                        <td className="px-6 py-3.5 uppercase font-semibold text-xs text-indigo-300">
+                                    <tr key={batch.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                                        <td className="px-6 py-3.5 uppercase font-semibold text-xs text-[#705CF6] dark:text-indigo-300">
                                             {batch.payment_channel}
                                         </td>
-                                        <td className="px-6 py-3.5 font-mono text-xs text-slate-300">
+                                        <td className="px-6 py-3.5 font-mono text-xs text-slate-700 dark:text-slate-300">
                                             {batch.original_filename}
                                         </td>
-                                        <td className="px-6 py-3.5 text-xs text-slate-400">
+                                        <td className="px-6 py-3.5 text-xs text-slate-500 dark:text-slate-400">
                                             {batch.statement_date}
                                         </td>
-                                        <td className="px-6 py-3.5 text-xs font-semibold text-white">
+                                        <td className="px-6 py-3.5 text-xs font-semibold text-slate-900 dark:text-white">
                                             {batch.total_records}
                                         </td>
-                                        <td className="px-6 py-3.5 text-xs font-mono text-emerald-400">
+                                        <td className="px-6 py-3.5 text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400">
                                             {formatMMK(batch.total_credit_amount)}
                                         </td>
                                         <td className="px-6 py-3.5">
@@ -527,7 +524,7 @@ export default function SimulationStudio({
                                                     channel: batch.payment_channel,
                                                     batch_id: batch.id,
                                                 })}
-                                                className="inline-flex items-center text-xs font-medium text-indigo-400 hover:text-indigo-300 gap-1"
+                                                className="inline-flex items-center text-xs font-semibold text-[#705CF6] dark:text-indigo-400 hover:underline gap-1"
                                             >
                                                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -545,21 +542,21 @@ export default function SimulationStudio({
 
             {/* Custom Tailwind Confirmation Modal for Reset Demo */}
             {showResetModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
-                    <div className="w-full max-w-md rounded-2xl bg-slate-900 border border-slate-800 p-6 shadow-2xl space-y-4">
-                        <div className="flex items-center gap-3 text-rose-400">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fadeIn">
+                    <div className="w-full max-w-md rounded-2xl bg-white dark:bg-[#161B26] border border-slate-200 dark:border-slate-800 p-6 shadow-2xl space-y-4">
+                        <div className="flex items-center gap-3 text-rose-500">
                             <span className="p-2 rounded-xl bg-rose-500/10 border border-rose-500/30">
                                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                                 </svg>
                             </span>
                             <div>
-                                <h3 className="font-bold text-base text-white">Reset Demo Environment</h3>
-                                <p className="text-xs text-slate-400">University Showcase Clean Reset</p>
+                                <h3 className="font-bold text-base text-slate-900 dark:text-white">Reset Demo Environment</h3>
+                                <p className="text-xs text-slate-500 dark:text-slate-400">University Showcase Clean Reset</p>
                             </div>
                         </div>
 
-                        <p className="text-sm text-slate-300 leading-relaxed">
+                        <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
                             Are you sure you want to re-seed the environment? This will wipe generated test batches and restore the pristine initial 15 demo invoices and 4 demo accounts.
                         </p>
 
@@ -567,7 +564,7 @@ export default function SimulationStudio({
                             <button
                                 type="button"
                                 onClick={() => setShowResetModal(false)}
-                                className="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 transition"
+                                className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 transition"
                             >
                                 Cancel
                             </button>
@@ -575,7 +572,7 @@ export default function SimulationStudio({
                                 type="button"
                                 onClick={handleConfirmReset}
                                 disabled={resetProcessing}
-                                className="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-xs font-semibold text-white shadow-lg shadow-rose-600/30 transition disabled:opacity-50"
+                                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-xs font-semibold text-white shadow-sm transition disabled:opacity-50"
                             >
                                 {resetProcessing ? 'Resetting...' : 'Yes, Reset Environment'}
                             </button>

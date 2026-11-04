@@ -6,6 +6,7 @@ use App\Models\BankTransaction;
 use App\Models\Invoice;
 use App\Models\PaymentSlip;
 use App\Models\ReconciliationMatch;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -15,9 +16,15 @@ class DashboardController extends Controller
     /**
      * Display the FinTech reconciliation and fraud analytics dashboard.
      */
-    public function index(Request $request): Response
+    public function index(Request $request): Response|RedirectResponse
     {
         $user = $request->user();
+
+        // Admin is strictly routed to the Chief Auditor Governance Suite
+        if ($user->hasRole('admin')) {
+            return redirect()->route('admin.dashboard');
+        }
+
         $isCustomer = $user->hasRole('customer') && ! $user->hasAnyRole(['admin', 'accountant']);
 
         // Base queries scoped for role (customer sees only their own data; admin/accountant see system-wide)

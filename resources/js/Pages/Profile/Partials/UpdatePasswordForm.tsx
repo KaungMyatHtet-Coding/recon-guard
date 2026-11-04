@@ -51,13 +51,12 @@ export default function UpdatePasswordForm({
     return (
         <section className={className}>
             <header>
-                <h2 className="text-lg font-medium text-gray-900">
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white">
                     Update Password
                 </h2>
 
-                <p className="mt-1 text-sm text-gray-600">
-                    Ensure your account is using a long, random password to stay
-                    secure.
+                <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                    Ensure your account is using a long, random password to stay secure.
                 </p>
             </header>
 
@@ -76,7 +75,7 @@ export default function UpdatePasswordForm({
                             setData('current_password', e.target.value)
                         }
                         type="password"
-                        className="mt-1 block w-full"
+                        className="mt-1 block w-full bg-white dark:bg-[#161B26] text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-[#705CF6] focus:border-transparent"
                         autoComplete="current-password"
                     />
 
@@ -95,7 +94,7 @@ export default function UpdatePasswordForm({
                         value={data.password}
                         onChange={(e) => setData('password', e.target.value)}
                         type="password"
-                        className="mt-1 block w-full"
+                        className="mt-1 block w-full bg-white dark:bg-[#161B26] text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-[#705CF6] focus:border-transparent"
                         autoComplete="new-password"
                     />
 
@@ -115,7 +114,7 @@ export default function UpdatePasswordForm({
                             setData('password_confirmation', e.target.value)
                         }
                         type="password"
-                        className="mt-1 block w-full"
+                        className="mt-1 block w-full bg-white dark:bg-[#161B26] text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-[#705CF6] focus:border-transparent"
                         autoComplete="new-password"
                     />
 
@@ -135,7 +134,7 @@ export default function UpdatePasswordForm({
                         leave="transition ease-in-out"
                         leaveTo="opacity-0"
                     >
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
                             Saved.
                         </p>
                     </Transition>

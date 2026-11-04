@@ -25,9 +25,22 @@ class User extends Authenticatable
         'email',
         'password',
         'phone',
+        'nrc_number',
+        'address',
+        'emergency_contact',
         'company_name',
+        'avatar_path',
         'is_blacklisted',
         'blacklist_reason',
+    ];
+
+    /**
+     * The accessors to append to the model's array form.
+     *
+     * @var list<string>
+     */
+    protected $appends = [
+        'avatar_url',
     ];
 
     /**
@@ -52,6 +65,15 @@ class User extends Authenticatable
             'password' => 'hashed',
             'is_blacklisted' => 'boolean',
         ];
+    }
+
+    public function getAvatarUrlAttribute(): ?string
+    {
+        if ($this->avatar_path) {
+            return asset('storage/' . $this->avatar_path);
+        }
+
+        return null;
     }
 
     public function invoices(): HasMany

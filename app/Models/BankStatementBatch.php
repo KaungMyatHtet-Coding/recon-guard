@@ -19,6 +19,10 @@ class BankStatementBatch extends Model
         'total_records',
         'total_credit_amount',
         'status',
+        'rollback_requested',
+        'rollback_reason',
+        'rollback_requested_at',
+        'rollback_requested_by',
     ];
 
     protected function casts(): array
@@ -27,7 +31,14 @@ class BankStatementBatch extends Model
             'statement_date' => 'date',
             'total_records' => 'integer',
             'total_credit_amount' => 'decimal:2',
+            'rollback_requested' => 'boolean',
+            'rollback_requested_at' => 'datetime',
         ];
+    }
+
+    public function rollbackRequester(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'rollback_requested_by');
     }
 
     public function uploader(): BelongsTo

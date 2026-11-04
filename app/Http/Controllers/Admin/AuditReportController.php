@@ -61,6 +61,7 @@ class AuditReportController extends Controller
 
         return Inertia::render('Admin/AuditReport', [
             'records' => $records,
+            'can_export_pdf' => $request->user()->hasRole('admin'),
             'summary' => [
                 'total_records' => $totalRecords,
                 'matched_volume' => $matchedVolume,

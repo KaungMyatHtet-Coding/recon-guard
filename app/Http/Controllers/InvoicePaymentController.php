@@ -34,7 +34,12 @@ class InvoicePaymentController extends Controller
         $query = Invoice::query()->withCount('paymentSlips');
 
         if ($isCustomer) {
-            $query->where('user_id', $user->id);
+            $query->where(function ($q) use ($user) {
+                $q->where('user_id', $user->id);
+                if ($user->phone) {
+                    $q->orWhere('customer_phone', $user->phone);
+                }
+            });
         }
 
         // Filter tab
@@ -54,7 +59,12 @@ class InvoicePaymentController extends Controller
         // Summary counts
         $countsQuery = Invoice::query();
         if ($isCustomer) {
-            $countsQuery->where('user_id', $user->id);
+            $countsQuery->where(function ($q) use ($user) {
+                $q->where('user_id', $user->id);
+                if ($user->phone) {
+                    $q->orWhere('customer_phone', $user->phone);
+                }
+            });
         }
 
         $stats = [
@@ -121,8 +131,12 @@ class InvoicePaymentController extends Controller
     public function show(Request $request, Invoice $invoice): Response
     {
         $user = $request->user();
-        if ($user->hasRole('customer') && ! $user->hasAnyRole(['admin', 'accountant']) && $invoice->user_id !== $user->id) {
-            abort(403);
+        $isCustomer = $user->hasRole('customer') && ! $user->hasAnyRole(['admin', 'accountant']);
+        if ($isCustomer) {
+            $isOwner = ($invoice->user_id === $user->id) || ($user->phone && $invoice->customer_phone === $user->phone);
+            if (! $isOwner) {
+                abort(403, 'Unauthorized access to this invoice.');
+            }
         }
 
         $invoice->load(['paymentSlips' => fn ($q) => $q->latest('id')]);
@@ -188,6 +202,15 @@ class InvoicePaymentController extends Controller
      */
     public function analyzeSlip(Request $request, Invoice $invoice): JsonResponse
     {
+        $user = $request->user();
+        $isCustomer = $user->hasRole('customer') && ! $user->hasAnyRole(['admin', 'accountant']);
+        if ($isCustomer) {
+            $isOwner = ($invoice->user_id === $user->id) || ($user->phone && $invoice->customer_phone === $user->phone);
+            if (! $isOwner) {
+                abort(403, 'Unauthorized access to this invoice.');
+            }
+        }
+
         $request->validate([
             'slip_file' => 'required|file|mimes:png,jpg,jpeg,webp|max:5120',
             'channel' => 'nullable|string|in:kbzpay,wavepay,cbpay,ayapay',
@@ -210,8 +233,12 @@ class InvoicePaymentController extends Controller
     public function submitSlip(Request $request, Invoice $invoice): RedirectResponse
     {
         $user = $request->user();
-        if ($user->hasRole('customer') && ! $user->hasAnyRole(['admin', 'accountant']) && $invoice->user_id !== $user->id) {
-            abort(403);
+        $isCustomer = $user->hasRole('customer') && ! $user->hasAnyRole(['admin', 'accountant']);
+        if ($isCustomer) {
+            $isOwner = ($invoice->user_id === $user->id) || ($user->phone && $invoice->customer_phone === $user->phone);
+            if (! $isOwner) {
+                abort(403, 'Unauthorized access to this invoice.');
+            }
         }
 
         $validated = $request->validate([

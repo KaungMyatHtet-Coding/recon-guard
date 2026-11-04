@@ -185,7 +185,7 @@ export default function InvoiceShow({
                     <div className="flex items-center gap-3">
                         <Link
                             href={route('invoices.index')}
-                            className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition"
+                            className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition"
                         >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -193,19 +193,19 @@ export default function InvoiceShow({
                         </Link>
                         <div>
                             <div className="flex items-center gap-2">
-                                <h2 className="text-xl font-bold leading-tight text-white font-mono">
+                                <h2 className="text-xl font-bold leading-tight text-slate-900 dark:text-white font-mono">
                                     {invoice.invoice_number}
                                 </h2>
                                 {getStatusBadge(invoice.status)}
                             </div>
-                            <p className="text-xs text-slate-400 mt-0.5">
-                                Issued for <span className="text-white font-medium">{invoice.customer_name}</span> · Amount: <span className="text-emerald-400 font-mono font-bold">{formatMMK(invoice.amount)}</span>
+                            <p className="text-xs text-slate-700 dark:text-slate-400 mt-0.5">
+                                Issued for <span className="text-slate-900 dark:text-white font-semibold">{invoice.customer_name}</span> · Amount: <span className="text-emerald-600 dark:text-emerald-400 font-mono font-bold">{formatMMK(invoice.amount)}</span>
                             </p>
                         </div>
                     </div>
 
-                    <div className="text-xs text-slate-400">
-                        Due Date: <span className="text-slate-200">{invoice.due_date || 'Immediate'}</span>
+                    <div className="text-xs text-slate-700 dark:text-slate-400">
+                        Due Date: <span className="text-slate-900 dark:text-slate-200 font-medium">{invoice.due_date || 'Immediate'}</span>
                     </div>
                 </div>
             }
@@ -218,13 +218,13 @@ export default function InvoiceShow({
                     {/* Left Column (5 Cols) */}
                     <div className="lg:col-span-5 space-y-6">
                         {/* Multi-Channel Merchant Payment Guide */}
-                        <div className="rounded-xl border border-slate-800 bg-slate-800/40 p-5 backdrop-blur">
-                            <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
+                        <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-[#161B26] p-5 shadow-sm">
+                            <h3 className="text-xs font-bold text-slate-700 dark:text-slate-400 uppercase tracking-wider mb-3">
                                 Step 1: Select Channel & Pay Invoice
                             </h3>
 
                             {/* Channel Tabs */}
-                            <div className="grid grid-cols-4 gap-1.5 p-1 bg-slate-900 rounded-lg border border-slate-800 mb-4">
+                            <div className="grid grid-cols-4 gap-1.5 p-1 bg-slate-100 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 mb-4">
                                 {(['kbzpay', 'wavepay', 'cbpay', 'ayapay'] as const).map((ch) => (
                                     <button
                                         key={ch}
@@ -233,10 +233,10 @@ export default function InvoiceShow({
                                             setActiveChannel(ch);
                                             setSubmitData('payment_channel', ch);
                                         }}
-                                        className={`py-1.5 text-xs font-semibold rounded uppercase tracking-wider transition ${
+                                        className={`py-1.5 text-xs font-semibold rounded-lg uppercase tracking-wider transition ${
                                             activeChannel === ch
-                                                ? 'bg-indigo-600 text-white shadow-md'
-                                                : 'text-slate-400 hover:text-white'
+                                                ? 'bg-[#705CF6] text-white shadow-sm'
+                                                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                                         }`}
                                     >
                                         {ch === 'kbzpay' ? 'KPay' : ch === 'wavepay' ? 'Wave' : ch === 'cbpay' ? 'CB' : 'AYA'}
@@ -245,37 +245,37 @@ export default function InvoiceShow({
                             </div>
 
                             {/* Merchant Details Box */}
-                            <div className="p-4 rounded-lg bg-slate-900/80 border border-slate-800 space-y-3">
+                            <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 space-y-3">
                                 <div className="flex items-center justify-between">
-                                    <span className="text-xs font-bold text-white uppercase">{currentMerchant.name}</span>
-                                    <span className="text-[10px] px-2 py-0.5 rounded font-mono bg-indigo-950 text-indigo-300 border border-indigo-800">
+                                    <span className="text-xs font-bold text-slate-900 dark:text-white uppercase">{currentMerchant.name}</span>
+                                    <span className="text-[10px] px-2 py-0.5 rounded-md font-mono bg-purple-50 dark:bg-purple-950 text-[#705CF6] dark:text-purple-300 border border-purple-200 dark:border-purple-800 font-semibold">
                                         Verified Gateway
                                     </span>
                                 </div>
 
-                                <div className="text-xs space-y-1.5 text-slate-300">
-                                    <div><span className="text-slate-500">Payee: </span><span className="font-semibold text-white">{currentMerchant.account_name}</span></div>
-                                    <div><span className="text-slate-500">Account / Shop: </span><span className="font-mono text-indigo-300 font-semibold">{currentMerchant.account_number}</span></div>
-                                    <div><span className="text-slate-500">Amount Due: </span><span className="font-mono font-bold text-emerald-400">{formatMMK(invoice.amount)}</span></div>
+                                <div className="text-xs space-y-1.5 text-slate-700 dark:text-slate-300">
+                                    <div><span className="text-slate-500 dark:text-slate-400">Payee: </span><span className="font-semibold text-slate-900 dark:text-white">{currentMerchant.account_name}</span></div>
+                                    <div><span className="text-slate-500 dark:text-slate-400">Account / Shop: </span><span className="font-mono text-[#705CF6] dark:text-indigo-300 font-semibold">{currentMerchant.account_number}</span></div>
+                                    <div><span className="text-slate-500 dark:text-slate-400">Amount Due: </span><span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">{formatMMK(invoice.amount)}</span></div>
                                 </div>
 
-                                <div className="p-2.5 rounded bg-slate-800/60 border border-slate-700/60 text-[11px] text-slate-400">
+                                <div className="p-2.5 rounded-xl bg-white dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 text-[11px] text-slate-600 dark:text-slate-400">
                                     💡 {currentMerchant.guide}
                                 </div>
                             </div>
                         </div>
 
                         {/* Submitted Payment Slips History */}
-                        <div className="rounded-xl border border-slate-800 bg-slate-800/40 p-5 backdrop-blur space-y-4">
+                        <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-[#161B26] p-5 shadow-sm space-y-4">
                             <div className="flex items-center justify-between">
-                                <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                                <h3 className="text-xs font-bold text-slate-700 dark:text-slate-400 uppercase tracking-wider">
                                     Submitted Slips ({submittedSlips.length})
                                 </h3>
-                                <span className="text-[11px] text-slate-500">Audit Records</span>
+                                <span className="text-[11px] text-slate-500 dark:text-slate-400">Audit Records</span>
                             </div>
 
                             {submittedSlips.length === 0 ? (
-                                <div className="text-center py-6 text-xs text-slate-500">
+                                <div className="text-center py-6 text-xs text-slate-500 dark:text-slate-400">
                                     No payment slips uploaded for this invoice yet.
                                 </div>
                             ) : (
@@ -283,45 +283,45 @@ export default function InvoiceShow({
                                     {submittedSlips.map((slip) => (
                                         <div
                                             key={slip.id}
-                                            className="p-3.5 rounded-lg bg-slate-900/90 border border-slate-800 hover:border-slate-700 transition space-y-2"
+                                            className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition space-y-2"
                                         >
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-2">
-                                                    <span className="text-xs font-bold uppercase text-indigo-300">{slip.channel}</span>
-                                                    <span className="text-[11px] font-mono text-slate-400">#{slip.transaction_id}</span>
+                                                    <span className="text-xs font-bold uppercase text-[#705CF6] dark:text-indigo-300">{slip.channel}</span>
+                                                    <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">#{slip.transaction_id}</span>
                                                 </div>
                                                 <span className={`text-[10px] px-2 py-0.5 rounded font-semibold uppercase ${
-                                                    slip.verification_status === 'matched' ? 'bg-emerald-950 text-emerald-300 border border-emerald-800'
+                                                    slip.verification_status === 'matched' ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
                                                     : slip.verification_status === 'tampered_fraud' || slip.verification_status === 'duplicate_fraud'
-                                                    ? 'bg-rose-950 text-rose-300 border border-rose-800'
-                                                    : 'bg-sky-950 text-sky-300 border border-sky-800'
+                                                    ? 'bg-rose-50 dark:bg-rose-950 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-800'
+                                                    : 'bg-sky-50 dark:bg-sky-950 text-sky-700 dark:text-sky-300 border border-sky-300 dark:border-sky-800'
                                                 }`}>
                                                     {slip.verification_status}
                                                 </span>
                                             </div>
 
                                             <div className="flex items-center justify-between text-xs">
-                                                <span className="text-slate-400">Claimed Amount:</span>
-                                                <span className="font-mono font-semibold text-white">{formatMMK(slip.amount)}</span>
+                                                <span className="text-slate-600 dark:text-slate-400">Claimed Amount:</span>
+                                                <span className="font-mono font-semibold text-slate-900 dark:text-white">{formatMMK(slip.amount)}</span>
                                             </div>
 
                                             <div className="flex items-center justify-between text-xs">
-                                                <span className="text-slate-400">Forensics:</span>
+                                                <span className="text-slate-600 dark:text-slate-400">Forensics:</span>
                                                 {slip.exif_tamper_flag ? (
-                                                    <span className="text-rose-400 font-semibold flex items-center gap-1">
+                                                    <span className="text-rose-600 dark:text-rose-400 font-semibold flex items-center gap-1">
                                                         ⚠️ Photoshop/Tampered Detected
                                                     </span>
                                                 ) : (
-                                                    <span className="text-emerald-400 font-medium">Clean Original</span>
+                                                    <span className="text-emerald-600 dark:text-emerald-400 font-medium">Clean Original</span>
                                                 )}
                                             </div>
 
-                                            <div className="pt-2 flex items-center justify-between border-t border-slate-800/80 text-[11px]">
-                                                <span className="text-slate-500">{slip.created_at}</span>
+                                            <div className="pt-2 flex items-center justify-between border-t border-slate-200 dark:border-slate-800/80 text-[11px]">
+                                                <span className="text-slate-500 dark:text-slate-400">{slip.created_at}</span>
                                                 <button
                                                     type="button"
                                                     onClick={() => setModalImage(slip.image_url)}
-                                                    className="text-indigo-400 hover:underline flex items-center gap-1"
+                                                    className="text-[#705CF6] dark:text-indigo-400 hover:underline flex items-center gap-1 font-medium"
                                                 >
                                                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -339,24 +339,24 @@ export default function InvoiceShow({
 
                     {/* Right Column (7 Cols): Upload Payment Slip & Live OCR Forensics Scanner */}
                     <div className="lg:col-span-7 space-y-6">
-                        <div className="rounded-xl border border-slate-800 bg-slate-800/40 p-6 backdrop-blur space-y-6">
+                        <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-[#161B26] p-6 shadow-sm space-y-6">
                             <div>
-                                <h3 className="text-base font-bold text-white flex items-center gap-2">
-                                    <span className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400">
+                                <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                                    <span className="p-1.5 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                                         </svg>
                                     </span>
                                     Step 2: Upload Payment Slip & Live OCR Forensics Scanner
                                 </h3>
-                                <p className="text-xs text-slate-400 mt-1">
+                                <p className="text-xs text-slate-700 dark:text-slate-400 mt-1">
                                     Drop your payment screenshot here. The automated OCR engine extracts receipt fields and inspects EXIF binary tampering signatures in real time.
                                 </p>
                             </div>
 
                             <form onSubmit={handleSubmitSlip} className="space-y-6">
                                 {/* Drag & Drop File Picker */}
-                                <div className="border-2 border-dashed border-slate-700 hover:border-indigo-500 rounded-xl p-6 text-center bg-slate-900/50 transition cursor-pointer relative">
+                                <div className="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-[#705CF6] dark:hover:border-purple-500 rounded-2xl p-6 text-center bg-slate-50/60 dark:bg-slate-900/50 transition cursor-pointer relative">
                                     <input
                                         type="file"
                                         accept="image/png,image/jpeg,image/webp"
@@ -364,15 +364,15 @@ export default function InvoiceShow({
                                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                                     />
                                     <div className="space-y-2">
-                                        <div className="mx-auto w-12 h-12 rounded-full bg-indigo-500/10 text-indigo-400 flex items-center justify-center">
+                                        <div className="mx-auto w-12 h-12 rounded-2xl bg-[#705CF6]/10 text-[#705CF6] flex items-center justify-center">
                                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                             </svg>
                                         </div>
-                                        <div className="text-sm font-semibold text-white">
+                                        <div className="text-sm font-semibold text-slate-900 dark:text-white">
                                             {selectedFile ? selectedFile.name : 'Click or drag & drop payment screenshot here'}
                                         </div>
-                                        <div className="text-xs text-slate-400">
+                                        <div className="text-xs text-slate-500 dark:text-slate-400">
                                             Supports PNG, JPG, JPEG, WEBP (Max 5MB)
                                         </div>
                                     </div>
@@ -380,47 +380,47 @@ export default function InvoiceShow({
 
                                 {/* Live OCR Scanner Feedback & Status */}
                                 {isScanning && (
-                                    <div className="p-4 rounded-lg bg-indigo-950/60 border border-indigo-700/60 flex items-center gap-3 animate-pulse">
-                                        <svg className="animate-spin h-5 w-5 text-indigo-400" viewBox="0 0 24 24">
+                                    <div className="p-4 rounded-xl bg-purple-50 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-700/60 flex items-center gap-3 animate-pulse">
+                                        <svg className="animate-spin h-5 w-5 text-[#705CF6]" viewBox="0 0 24 24">
                                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                                         </svg>
                                         <div>
-                                            <div className="text-xs font-bold text-white">Analyzing Slip Image & Running Forensics...</div>
-                                            <div className="text-[11px] text-indigo-300">Extracting Transaction ID, amount, and inspecting EXIF metadata signatures</div>
+                                            <div className="text-xs font-bold text-slate-900 dark:text-white">Analyzing Slip Image & Running Forensics...</div>
+                                            <div className="text-[11px] text-[#705CF6] dark:text-purple-300">Extracting Transaction ID, amount, and inspecting EXIF metadata signatures</div>
                                         </div>
                                     </div>
                                 )}
 
                                 {/* Forensics & OCR Inspection Banner */}
                                 {ocrScanResult && (
-                                    <div className={`p-4 rounded-lg border space-y-3 ${
+                                    <div className={`p-4 rounded-xl border space-y-3 ${
                                         ocrScanResult.exif_tamper_flag || ocrScanResult.fraud_checks?.transaction_reused
-                                            ? 'bg-rose-950/70 border-rose-700/80 text-rose-200'
-                                            : 'bg-emerald-950/70 border-emerald-700/80 text-emerald-200'
+                                            ? 'bg-rose-50 dark:bg-rose-950/70 border-rose-200 dark:border-rose-700/80 text-rose-800 dark:text-rose-200'
+                                            : 'bg-emerald-50 dark:bg-emerald-950/70 border-emerald-200 dark:border-emerald-700/80 text-emerald-800 dark:text-emerald-200'
                                     }`}>
                                         <div className="flex items-center justify-between">
                                             <div className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
                                                 {ocrScanResult.exif_tamper_flag ? (
                                                     <>
-                                                        <span className="h-2 w-2 rounded-full bg-rose-400 animate-ping"></span>
+                                                        <span className="h-2 w-2 rounded-full bg-rose-500 animate-ping"></span>
                                                         ⚠️ Fraud / Tamper Marker Identified!
                                                     </>
                                                 ) : (
                                                     <>
-                                                        <span className="h-2 w-2 rounded-full bg-emerald-400"></span>
+                                                        <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
                                                         ✓ Genuine Original Slip Verified
                                                     </>
                                                 )}
                                             </div>
-                                            <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-black/40">
+                                            <span className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-white/80 dark:bg-black/40 font-bold">
                                                 OCR Confidence: {ocrScanResult.ocr_confidence}%
                                             </span>
                                         </div>
 
                                         {/* Forensics Warnings */}
                                         {ocrScanResult.forensic_warnings?.length > 0 && (
-                                            <ul className="text-xs space-y-1 text-rose-300 list-disc list-inside">
+                                            <ul className="text-xs space-y-1 text-rose-700 dark:text-rose-300 list-disc list-inside">
                                                 {ocrScanResult.forensic_warnings.map((w: string, i: number) => (
                                                     <li key={i}>{w}</li>
                                                 ))}
@@ -428,7 +428,7 @@ export default function InvoiceShow({
                                         )}
 
                                         {ocrScanResult.fraud_checks?.reasons?.length > 0 && (
-                                            <ul className="text-xs space-y-1 text-rose-300 list-disc list-inside">
+                                            <ul className="text-xs space-y-1 text-rose-700 dark:text-rose-300 list-disc list-inside">
                                                 {ocrScanResult.fraud_checks.reasons.map((r: string, i: number) => (
                                                     <li key={i}>{r}</li>
                                                 ))}
@@ -440,7 +440,7 @@ export default function InvoiceShow({
                                 {/* Auto-populated Form Inputs */}
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-xs font-medium text-slate-300 mb-1">
+                                        <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                                             Extracted Transaction ID
                                         </label>
                                         <input
@@ -449,12 +449,12 @@ export default function InvoiceShow({
                                             onChange={(e) => setSubmitData('extracted_transaction_id', e.target.value)}
                                             required
                                             placeholder="010020261030994821"
-                                            className="w-full rounded-lg bg-slate-900 border border-slate-700 font-mono text-sm text-white"
+                                            className="w-full rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 font-mono text-sm text-slate-900 dark:text-white"
                                         />
                                     </div>
 
                                     <div>
-                                        <label className="block text-xs font-medium text-slate-300 mb-1">
+                                        <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                                             Extracted Amount (MMK)
                                         </label>
                                         <input
@@ -462,12 +462,12 @@ export default function InvoiceShow({
                                             value={submitData.extracted_amount}
                                             onChange={(e) => setSubmitData('extracted_amount', e.target.value)}
                                             required
-                                            className="w-full rounded-lg bg-slate-900 border border-slate-700 font-mono text-sm text-white"
+                                            className="w-full rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 font-mono text-sm text-slate-900 dark:text-white"
                                         />
                                     </div>
 
                                     <div>
-                                        <label className="block text-xs font-medium text-slate-300 mb-1">
+                                        <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                                             Sender Phone Number
                                         </label>
                                         <input
@@ -475,18 +475,18 @@ export default function InvoiceShow({
                                             value={submitData.sender_phone}
                                             onChange={(e) => setSubmitData('sender_phone', e.target.value)}
                                             placeholder="09960111222"
-                                            className="w-full rounded-lg bg-slate-900 border border-slate-700 text-sm text-white"
+                                            className="w-full rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-sm text-slate-900 dark:text-white"
                                         />
                                     </div>
 
                                     <div>
-                                        <label className="block text-xs font-medium text-slate-300 mb-1">
+                                        <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                                             Payment Channel
                                         </label>
                                         <select
                                             value={submitData.payment_channel}
                                             onChange={(e) => setSubmitData('payment_channel', e.target.value as any)}
-                                            className="w-full rounded-lg bg-slate-900 border border-slate-700 text-sm text-white"
+                                            className="w-full rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-sm text-slate-900 dark:text-white"
                                         >
                                             <option value="kbzpay">KBZPay</option>
                                             <option value="wavepay">WavePay</option>
@@ -500,7 +500,7 @@ export default function InvoiceShow({
                                     <button
                                         type="submit"
                                         disabled={submitProcessing || !selectedFile}
-                                        className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-sky-500 hover:opacity-95 font-bold text-sm text-white shadow-xl shadow-indigo-600/30 transition disabled:opacity-50 flex items-center justify-center gap-2"
+                                        className="w-full py-3 px-4 rounded-xl bg-[#705CF6] hover:bg-[#5f4be3] font-bold text-sm text-white shadow-md transition disabled:opacity-50 flex items-center justify-center gap-2"
                                     >
                                         {submitProcessing ? (
                                             <>
