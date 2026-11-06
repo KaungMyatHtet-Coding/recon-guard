@@ -31,6 +31,11 @@ class Invoice extends Model
         ];
     }
 
+    public function getTotalAmountAttribute(): float
+    {
+        return (float) $this->amount;
+    }
+
     public function customer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');

@@ -137,13 +137,24 @@ export default function AccountSuspended({ blacklist_reason, hotline, email }: P
                                     {errors.message && <p className="text-xs text-red-400 mt-1">{errors.message}</p>}
                                 </div>
 
-                                <div className="flex items-center justify-between pt-2">
-                                    <Link
-                                        href={route('dashboard')}
-                                        className="inline-flex items-center gap-1 text-xs text-slate-400 hover:text-white"
-                                    >
-                                        &larr; Return to Dashboard
-                                    </Link>
+                                <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+                                    <div className="flex items-center gap-3">
+                                        <Link
+                                            href={route('dashboard')}
+                                            className="inline-flex items-center gap-1 text-xs text-slate-400 hover:text-white"
+                                        >
+                                            &larr; Return to Dashboard
+                                        </Link>
+                                        <span className="text-slate-600 text-xs">|</span>
+                                        <Link
+                                            href={route('logout')}
+                                            method="post"
+                                            as="button"
+                                            className="inline-flex items-center gap-1 text-xs text-rose-400 hover:text-rose-300"
+                                        >
+                                            Sign Out / Switch Account
+                                        </Link>
+                                    </div>
 
                                     <button
                                         type="submit"

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AccountNotification;
 use App\Models\Invoice;
 use App\Models\PaymentSlip;
 use App\Models\User;
@@ -98,23 +99,46 @@ class InvoicePaymentController extends Controller
             abort(403);
         }
 
-        $validated = $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'amount' => 'required|numeric|min:1000',
-            'expected_channel' => 'required|in:any,kbzpay,wavepay,cbpay,ayapay',
-            'description' => 'nullable|string|max:255',
-            'due_date' => 'nullable|date',
-        ]);
+        $customerType = $request->input('customer_type', $request->filled('user_id') ? 'registered' : 'guest');
 
-        $customer = User::findOrFail($validated['user_id']);
+        if ($customerType === 'guest') {
+            $validated = $request->validate([
+                'customer_name' => 'required|string|max:255',
+                'customer_phone' => 'required|string|max:50',
+                'amount' => 'required|numeric|min:1000',
+                'expected_channel' => 'required|in:any,kbzpay,wavepay,cbpay,ayapay',
+                'description' => 'nullable|string|max:255',
+                'due_date' => 'nullable|date',
+            ]);
+
+            // If a registered customer already has this phone number, link to their account
+            $matchingUser = User::where('phone', $validated['customer_phone'])->first();
+            $userId = $matchingUser?->id;
+            $customerName = $validated['customer_name'];
+            $customerPhone = $validated['customer_phone'];
+        } else {
+            $validated = $request->validate([
+                'user_id' => 'required|exists:users,id',
+                'amount' => 'required|numeric|min:1000',
+                'expected_channel' => 'required|in:any,kbzpay,wavepay,cbpay,ayapay',
+                'description' => 'nullable|string|max:255',
+                'due_date' => 'nullable|date',
+            ]);
+
+            $customer = User::findOrFail($validated['user_id']);
+            $userId = $customer->id;
+            $customerName = $customer->name;
+            $customerPhone = $customer->phone ?? '09#########';
+        }
+
         $invoiceNum = 'INV-' . date('Y') . '-' . str_pad((string) mt_rand(1000, 999999), 6, '0', STR_PAD_LEFT);
 
         $invoice = Invoice::create([
             'invoice_number' => $invoiceNum,
-            'user_id' => $customer->id,
-            'customer_name' => $customer->name,
-            'customer_phone' => $customer->phone ?? '09#########',
-            'description' => $validated['description'] ?? "Commercial Invoice for {$customer->name}",
+            'user_id' => $userId,
+            'customer_name' => $customerName,
+            'customer_phone' => $customerPhone,
+            'description' => $validated['description'] ?? "Commercial Invoice for {$customerName}",
             'amount' => $validated['amount'],
             'expected_channel' => $validated['expected_channel'],
             'status' => 'unpaid',
@@ -312,5 +336,48 @@ class InvoicePaymentController extends Controller
         }
 
         return redirect()->back()->with('success', 'Payment slip uploaded successfully and OCR extracted! Pending 3-Way Bank Reconciliation.');
+    }
+
+    /**
+     * Record a direct counter cash settlement on behalf of a walk-in/counter customer.
+     */
+    public function settleCash(Request $request, Invoice $invoice): RedirectResponse
+    {
+        if ($request->user()->hasRole('customer') && ! $request->user()->hasAnyRole(['admin', 'accountant'])) {
+            abort(403);
+        }
+
+        $txRef = 'CASH-' . date('YmdHis') . '-' . rand(100, 999);
+
+        PaymentSlip::create([
+            'invoice_id'               => $invoice->id,
+            'user_id'                  => $invoice->user_id ?? $request->user()->id,
+            'payment_channel'          => 'CASH',
+            'image_path'               => 'payment_slips/cash_settlement.png',
+            'image_hash'               => hash('sha256', $txRef),
+            'extracted_transaction_id' => $txRef,
+            'extracted_amount'         => $invoice->amount,
+            'extracted_datetime'       => now(),
+            'sender_name'              => $invoice->customer_name,
+            'sender_phone'             => $invoice->customer_phone,
+            'ocr_confidence'           => 100,
+            'exif_tamper_flag'         => false,
+            'verification_status'      => 'verified_clean',
+        ]);
+
+        $invoice->update(['status' => 'reconciled']);
+
+        if ($invoice->user_id) {
+            AccountNotification::create([
+                'user_id'    => $invoice->user_id,
+                'title'      => 'Payment Verified / ငွေပေးချေမှု အတည်ပြုပြီးပါပြီ',
+                'message'    => 'Direct cash payment of ' . number_format($invoice->total_amount) . ' MMK for Invoice #' . $invoice->invoice_number . ' has been recorded and verified.',
+                'type'       => 'success',
+                'action_url' => '/invoices/' . $invoice->id,
+            ]);
+        }
+
+        return redirect()->route('invoices.show', $invoice)
+            ->with('success', 'Direct cash payment of ' . number_format($invoice->total_amount) . ' MMK recorded successfully.');
     }
 }

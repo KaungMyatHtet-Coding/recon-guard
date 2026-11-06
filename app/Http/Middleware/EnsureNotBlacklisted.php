@@ -30,7 +30,7 @@ class EnsureNotBlacklisted
 
             return Inertia::render('Errors/AccountSuspended', [
                 'blacklist_reason' => $reason,
-                'hotline' => '09-770001122',
+                'hotline' => '09-770001122, 09-990001122',
                 'email' => 'disputes@reconguard.test',
             ])->toResponse($request)->setStatusCode(403);
         }

@@ -28,6 +28,7 @@ export interface AccountNotificationItem {
     type: string;
     title: string;
     message: string;
+    action_url?: string | null;
     read_at: string | null;
     created_at: string;
 }
@@ -37,6 +38,8 @@ export type PageProps<
 > = T & {
     auth: {
         user: User;
+        unread_notifications_count?: number;
+        recent_notifications?: AccountNotificationItem[];
     };
     notifications?: AccountNotificationItem[];
     unread_notifications_count?: number;

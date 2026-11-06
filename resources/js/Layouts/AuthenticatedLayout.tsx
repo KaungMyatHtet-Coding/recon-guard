@@ -98,38 +98,14 @@ export default function Authenticated({
                     </Link>
 
                     <Link
-                        href={route('invoices.index')}
+                        href={route('admin.users.index')}
                         onClick={onClickHandler}
-                        className={getNavClass(Boolean(route().current('invoices.*')), isMobile)}
-                        title={t('nav.invoices_master', 'Invoices Master')}
+                        className={getNavClass(Boolean(route().current('admin.users.*')), isMobile)}
+                        title={t('nav.staff_users', 'Staff & User Management')}
                     >
-                        <span className="text-base shrink-0">📄</span>
+                        <span className="text-base shrink-0">👥</span>
                         {(!sidebarCollapsed || isMobile) && (
-                            <span className="truncate">{t('nav.invoices_master', 'Invoices Master')}</span>
-                        )}
-                    </Link>
-
-                    <Link
-                        href={route('bank-statements.index')}
-                        onClick={onClickHandler}
-                        className={getNavClass(Boolean(route().current('bank-statements.*')), isMobile)}
-                        title={t('nav.bank_ledger', 'Bank Ledger')}
-                    >
-                        <span className="text-base shrink-0">🏦</span>
-                        {(!sidebarCollapsed || isMobile) && (
-                            <span className="truncate">{t('nav.bank_ledger', 'Bank Ledger')}</span>
-                        )}
-                    </Link>
-
-                    <Link
-                        href={route('reconciliation.index')}
-                        onClick={onClickHandler}
-                        className={getNavClass(Boolean(route().current('reconciliation.*')), isMobile)}
-                        title={t('nav.audit_workbench', '3-Way Audit')}
-                    >
-                        <span className="text-base shrink-0">⚖️</span>
-                        {(!sidebarCollapsed || isMobile) && (
-                            <span className="truncate">{t('nav.audit_workbench', '3-Way Audit')}</span>
+                            <span className="truncate">{t('nav.staff_users', 'Staff & User Management')}</span>
                         )}
                     </Link>
 
@@ -137,11 +113,23 @@ export default function Authenticated({
                         href={route('admin.blacklist.index')}
                         onClick={onClickHandler}
                         className={getNavClass(Boolean(route().current('admin.blacklist.*')), isMobile)}
-                        title={t('nav.fraud_blacklist', 'Fraud & Blacklist')}
+                        title={t('nav.fraud_blacklist', 'Fraud & Blacklist Center')}
                     >
                         <span className="text-base shrink-0">🚨</span>
                         {(!sidebarCollapsed || isMobile) && (
-                            <span className="truncate">{t('nav.fraud_blacklist', 'Fraud & Blacklist')}</span>
+                            <span className="truncate">{t('nav.fraud_blacklist', 'Fraud & Blacklist Center')}</span>
+                        )}
+                    </Link>
+
+                    <Link
+                        href={route('admin.rollbacks.index')}
+                        onClick={onClickHandler}
+                        className={getNavClass(Boolean(route().current('admin.rollbacks.*')), isMobile)}
+                        title={t('nav.pending_rollbacks', 'Pending Rollbacks Queue')}
+                    >
+                        <span className="text-base shrink-0">⏳</span>
+                        {(!sidebarCollapsed || isMobile) && (
+                            <span className="truncate">{t('nav.pending_rollbacks', 'Pending Rollbacks Queue')}</span>
                         )}
                     </Link>
 
@@ -149,11 +137,11 @@ export default function Authenticated({
                         href={route('admin.audit-report')}
                         onClick={onClickHandler}
                         className={getNavClass(Boolean(route().current('admin.audit-report')), isMobile)}
-                        title={t('nav.official_audit_report', 'Official Audit Report')}
+                        title={t('nav.official_audit_report', 'Official PDF Audit Report')}
                     >
                         <span className="text-base shrink-0">📋</span>
                         {(!sidebarCollapsed || isMobile) && (
-                            <span className="truncate">{t('nav.official_audit_report', 'Official Audit Report')}</span>
+                            <span className="truncate">{t('nav.official_audit_report', 'Official PDF Audit Report')}</span>
                         )}
                     </Link>
 
@@ -168,20 +156,6 @@ export default function Authenticated({
                             <span className="truncate">{t('nav.profile', 'Profile Settings')}</span>
                         )}
                     </Link>
-
-                    <div className="pt-3 border-t border-slate-200/80 dark:border-slate-800/80 my-2">
-                        <Link
-                            href={route('simulation-studio.index')}
-                            onClick={onClickHandler}
-                            className={getNavClass(Boolean(route().current('simulation-studio.*')), isMobile)}
-                            title={t('nav.simulation_lab', 'Demo Simulation Lab')}
-                        >
-                            <span className="text-base shrink-0">🧪</span>
-                            {(!sidebarCollapsed || isMobile) && (
-                                <span className="truncate">{t('nav.simulation_lab', 'Demo Simulation Lab')}</span>
-                            )}
-                        </Link>
-                    </div>
                 </div>
             );
         }

@@ -1,6 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import React, { useRef, useState } from 'react';
+import RequestRollbackModal from './Partials/RequestRollbackModal';
 
 interface BatchItem {
     id: number;
@@ -85,6 +86,7 @@ export default function Index({ metrics, batches, transactions, filters }: Props
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [uploadChannel, setUploadChannel] = useState<string>('auto');
     const [inspectPayloadTx, setInspectPayloadTx] = useState<BankTxItem | null>(null);
+    const [rollbackModalBatch, setRollbackModalBatch] = useState<BatchItem | null>(null);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -155,14 +157,7 @@ export default function Index({ metrics, batches, transactions, filters }: Props
     };
 
     const handleRequestRollback = (batch: BatchItem) => {
-        const reason = prompt(`Enter reason for requesting rollback of "${batch.original_filename}":`, 'Incorrect statement file / Duplicate batch uploaded');
-        if (reason && reason.trim()) {
-            router.post(route('bank-statements.request-rollback', batch.id), {
-                reason: reason.trim(),
-            }, {
-                preserveScroll: true,
-            });
-        }
+        setRollbackModalBatch(batch);
     };
 
     const getChannelBadge = (ch: string, compact = false) => {
@@ -469,58 +464,58 @@ export default function Index({ metrics, batches, transactions, filters }: Props
                         <table className="w-full text-left text-xs">
                             <thead className="bg-slate-50 dark:bg-slate-900/80 text-slate-700 dark:text-slate-300 border-b border-slate-200 dark:border-slate-800 uppercase tracking-wider font-semibold">
                                 <tr>
-                                    <th className="px-4 py-3">Batch ID</th>
-                                    <th className="px-4 py-3">Channel</th>
-                                    <th className="px-4 py-3">Original Filename</th>
-                                    <th className="px-4 py-3">Statement Date</th>
-                                    <th className="px-4 py-3 text-right">Transactions</th>
-                                    <th className="px-4 py-3 text-right">Total Credit (MMK)</th>
-                                    <th className="px-4 py-3">Uploaded By</th>
-                                    <th className="px-4 py-3 text-right">Actions</th>
+                                    <th className="px-3 py-2 text-xs w-16">Batch ID</th>
+                                    <th className="px-3 py-2 text-xs w-24">Channel</th>
+                                    <th className="px-3 py-2 text-xs">Original Filename</th>
+                                    <th className="px-3 py-2 text-xs w-28 whitespace-nowrap">Statement Date</th>
+                                    <th className="px-3 py-2 text-xs text-right w-20">Transactions</th>
+                                    <th className="px-3 py-2 text-xs text-right w-32 whitespace-nowrap">Total Credit (MMK)</th>
+                                    <th className="px-3 py-2 text-xs w-28">Uploaded By</th>
+                                    <th className="px-3 py-2 text-xs text-right w-36 whitespace-nowrap">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
                                 {batches.data.length === 0 ? (
                                     <tr>
-                                        <td colSpan={8} className="px-4 py-8 text-center text-slate-500">
+                                        <td colSpan={8} className="px-3 py-6 text-center text-slate-500">
                                             No bank statement batches uploaded yet. Ingest your first statement CSV above!
                                         </td>
                                     </tr>
                                 ) : (
                                     batches.data.map((b) => (
                                         <tr key={b.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
-                                            <td className="px-4 py-3 font-mono font-semibold text-slate-700 dark:text-slate-300">
+                                            <td className="px-3 py-2 font-mono font-semibold text-slate-700 dark:text-slate-300">
                                                 #{b.id}
                                             </td>
-                                            <td className="px-4 py-3">
-                                                {getChannelBadge(b.payment_channel)}
+                                            <td className="px-3 py-2">
+                                                {getChannelBadge(b.payment_channel, true)}
                                             </td>
-                                            <td className="px-4 py-3 font-medium text-slate-900 dark:text-white max-w-xs truncate" title={b.original_filename}>
+                                            <td className="px-3 py-2 font-medium text-slate-900 dark:text-white max-w-[200px] truncate" title={b.original_filename}>
                                                 {b.original_filename}
                                             </td>
-                                            <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
-                                                {b.statement_date}
+                                            <td className="px-3 py-2 text-slate-600 dark:text-slate-400 font-mono whitespace-nowrap">
+                                                {b.statement_date ? b.statement_date.slice(0, 10) : 'N/A'}
                                             </td>
-                                            <td className="px-4 py-3 text-right font-mono font-bold text-slate-900 dark:text-slate-200">
+                                            <td className="px-3 py-2 text-right font-mono font-bold text-slate-900 dark:text-slate-200">
                                                 {b.total_records}
                                             </td>
-                                            <td className="px-4 py-3 text-right font-mono font-bold text-[#705CF6] dark:text-indigo-400">
+                                            <td className="px-3 py-2 text-right font-mono font-bold text-[#705CF6] dark:text-indigo-400 text-xs whitespace-nowrap">
                                                 {formatMmk(b.total_credit_amount)}
                                             </td>
-                                            <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
+                                            <td className="px-3 py-2 text-slate-600 dark:text-slate-400 truncate max-w-[120px]" title={b.uploader?.name || 'System / Auto'}>
                                                 {b.uploader?.name || 'System / Auto'}
                                             </td>
-                                            <td className="px-4 py-3 text-right space-x-2 whitespace-nowrap">
+                                            <td className="px-3 py-2 text-right space-x-1.5 whitespace-nowrap">
                                                 <Link
                                                     href={route('bank-statements.show', b.id)}
-                                                    className="inline-flex items-center gap-1 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white transition"
+                                                    className="inline-flex items-center gap-1 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white transition"
                                                 >
                                                     Inspect
                                                 </Link>
                                                 {isAdmin ? (
                                                     <button
                                                         onClick={() => handleDeleteBatch(b)}
-                                                        className={`inline-flex items-center gap-1 rounded-xl border px-2 py-1 text-xs font-semibold transition ${
+                                                        className={`inline-flex items-center gap-1 rounded-xl border px-2 py-0.5 text-xs font-semibold transition ${
                                                             b.rollback_requested
                                                                 ? 'border-red-600 bg-red-600 text-white hover:bg-red-700 shadow-sm'
                                                                 : 'border-red-200 dark:border-red-900/60 bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/60 hover:text-red-700 dark:hover:text-red-200'
@@ -532,7 +527,7 @@ export default function Index({ metrics, batches, transactions, filters }: Props
                                                 ) : (
                                                     b.rollback_requested ? (
                                                         <span
-                                                            className="inline-flex items-center gap-1 rounded-xl border border-amber-300 dark:border-amber-800/80 bg-amber-50 dark:bg-amber-950/60 px-2 py-1 text-[11px] font-semibold text-amber-700 dark:text-amber-300"
+                                                            className="inline-flex items-center gap-1 rounded-xl border border-amber-300 dark:border-amber-800/80 bg-amber-50 dark:bg-amber-950/60 px-2 py-0.5 text-[11px] font-semibold text-amber-700 dark:text-amber-300"
                                                             title={`Rollback requested: ${b.rollback_reason}`}
                                                         >
                                                             ⏳ Rollback Pending
@@ -540,7 +535,7 @@ export default function Index({ metrics, batches, transactions, filters }: Props
                                                     ) : (
                                                         <button
                                                             onClick={() => handleRequestRollback(b)}
-                                                            className="inline-flex items-center gap-1 rounded-xl border border-amber-300 dark:border-amber-900/60 bg-amber-50 dark:bg-amber-950/40 px-2 py-1 text-xs font-semibold text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/60 transition"
+                                                            className="inline-flex items-center gap-1 rounded-xl border border-amber-300 dark:border-amber-900/60 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 text-xs font-semibold text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/60 transition"
                                                             title="Submit a rollback request for Chief Auditor approval"
                                                         >
                                                             Request Rollback
@@ -847,6 +842,13 @@ export default function Index({ metrics, batches, transactions, filters }: Props
                     </div>
                 </div>
             )}
+
+            {/* Request Rollback Modal */}
+            <RequestRollbackModal
+                show={Boolean(rollbackModalBatch)}
+                batch={rollbackModalBatch}
+                onClose={() => setRollbackModalBatch(null)}
+            />
         </AuthenticatedLayout>
     );
 }

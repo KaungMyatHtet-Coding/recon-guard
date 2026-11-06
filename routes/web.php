@@ -2,11 +2,15 @@
 
 use App\Http\Controllers\Admin\AdminBlacklistController;
 use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\AdminRollbackController;
+use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\AuditReportController;
 use App\Http\Controllers\BankStatementController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InvoicePaymentController;
+use App\Http\Controllers\NotificationsController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PublicPaymentController;
 use App\Http\Controllers\ReconciliationController;
 use App\Http\Controllers\SimulationStudioController;
 use App\Http\Controllers\SupportAppealController;
@@ -23,6 +27,11 @@ Route::get('/', function () {
     ]);
 });
 
+// Public Guest Payment Portal (no auth required)
+Route::get('/pay/{invoiceNumber}', [PublicPaymentController::class, 'show'])->name('public.pay.show');
+Route::post('/pay/{invoiceNumber}/scan', [PublicPaymentController::class, 'scanSlip'])->middleware('throttle:5,1')->name('public.pay.scan');
+Route::post('/pay/{invoiceNumber}/submit-slip', [PublicPaymentController::class, 'submitSlip'])->middleware('throttle:5,1')->name('public.pay.submit');
+
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
@@ -34,6 +43,7 @@ Route::middleware(['auth', 'verified'])->prefix('invoices')->name('invoices.')->
     Route::get('/{invoice}', [InvoicePaymentController::class, 'show'])->name('show');
     Route::post('/{invoice}/analyze-slip', [InvoicePaymentController::class, 'analyzeSlip'])->middleware('not_blacklisted')->name('analyzeSlip');
     Route::post('/{invoice}/submit-slip', [InvoicePaymentController::class, 'submitSlip'])->middleware('not_blacklisted')->name('submitSlip');
+    Route::post('/{invoice}/settle-cash', [InvoicePaymentController::class, 'settleCash'])->name('settleCash');
 });
 
 // Phase 4: Multi-Bank Statement CSV Ingestion & Ledger (Admin & Accountant)
@@ -72,6 +82,19 @@ Route::middleware(['auth', 'verified', 'role:admin', 'admin_passcode'])->prefix(
     Route::get('/blacklist', [AdminBlacklistController::class, 'index'])->name('blacklist.index');
     Route::post('/blacklist/{user}', [AdminBlacklistController::class, 'toggleBlacklist'])->name('blacklist.toggle');
     Route::post('/appeals/{appeal}/resolve', [AdminBlacklistController::class, 'resolveAppeal'])->name('appeals.resolve');
+
+    // Phase 8B: Compliance Appeals Resolve via PATCH
+    Route::patch('/appeals/{appeal}/resolve', [AdminBlacklistController::class, 'resolveAppeal'])->name('appeals.resolve.patch');
+
+    // Phase 8B: Pending Rollbacks Queue (Chief Auditor Approval)
+    Route::get('/rollbacks', [AdminRollbackController::class, 'index'])->name('rollbacks.index');
+    Route::delete('/rollbacks/{batch}/approve', [AdminRollbackController::class, 'approve'])->name('rollbacks.approve');
+    Route::patch('/rollbacks/{batch}/dismiss', [AdminRollbackController::class, 'dismiss'])->name('rollbacks.dismiss');
+
+    // Phase 8B: Staff & User Management (Chief Auditor Governance)
+    Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
+    Route::post('/users', [AdminUserController::class, 'store'])->name('users.store');
+    Route::get('/users/{user}', [AdminUserController::class, 'show'])->name('users.show');
 });
 
 // Phase 6: Official Audit Report (Admin & Accountant)
@@ -93,6 +116,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/support/appeals', [SupportAppealController::class, 'store'])->name('support.appeals.store');
     Route::post('/notifications/mark-read', [SupportAppealController::class, 'markNotificationsRead'])->name('notifications.mark-read');
 
+    // Phase 8B: Notifications mark all read (JSON endpoint)
+    Route::post('/notifications/mark-all-read', [NotificationsController::class, 'markAllRead'])->name('notifications.mark-all-read');
+
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::post('/profile/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.avatar.update');
@@ -100,3 +126,4 @@ Route::middleware('auth')->group(function () {
 });
 
 require __DIR__.'/auth.php';
+

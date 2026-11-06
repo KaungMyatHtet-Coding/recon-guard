@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\AccountNotification;
 use App\Models\BankTransaction;
 use App\Models\Invoice;
 use App\Models\PaymentSlip;
@@ -71,6 +72,13 @@ class ReconciliationEngineService
                         $slip->update(['verification_status' => 'duplicate_fraud']);
                         if ($invoice) {
                             $invoice->update(['status' => 'fraud_flagged']);
+                            $this->notifyCustomerForInvoice(
+                                $invoice,
+                                'warning',
+                                'Payment Review Required / ငွေပေးချေမှု စစ်ဆေးမှု လိုအပ်သည်',
+                                'A discrepancy was detected in your submitted payment slip for Invoice #' . $invoice->invoice_number . '. Please contact our support team.',
+                                '/invoices'
+                            );
                         }
 
                         $bankTx = BankTransaction::where('payment_channel', $slip->payment_channel)
@@ -105,6 +113,13 @@ class ReconciliationEngineService
                     $slip->update(['verification_status' => 'tampered_fraud']);
                     if ($invoice) {
                         $invoice->update(['status' => 'fraud_flagged']);
+                        $this->notifyCustomerForInvoice(
+                            $invoice,
+                            'warning',
+                            'Payment Review Required / ငွေပေးချေမှု စစ်ဆေးမှု လိုအပ်သည်',
+                            'A discrepancy was detected in your submitted payment slip for Invoice #' . $invoice->invoice_number . '. Please contact our support team.',
+                            '/invoices'
+                        );
                     }
 
                     $bankTx = BankTransaction::where('payment_channel', $slip->payment_channel)
@@ -197,6 +212,13 @@ class ReconciliationEngineService
                         $slip->update(['verification_status' => 'matched']);
                         if ($invoice) {
                             $invoice->update(['status' => 'reconciled']);
+                            $this->notifyCustomerForInvoice(
+                                $invoice,
+                                'success',
+                                'Payment Verified / ငွေပေးချေမှု အတည်ပြုပြီးပါပြီ',
+                                'Your payment of ' . number_format($invoice->total_amount) . ' MMK for Invoice #' . $invoice->invoice_number . ' has been verified.',
+                                '/invoices'
+                            );
                         }
                         $bankTx->update(['match_status' => 'matched']);
 
@@ -225,6 +247,13 @@ class ReconciliationEngineService
                         $slip->update(['verification_status' => 'matched']);
                         if ($invoice) {
                             $invoice->update(['status' => 'reconciled']);
+                            $this->notifyCustomerForInvoice(
+                                $invoice,
+                                'success',
+                                'Payment Verified / ငွေပေးချေမှု အတည်ပြုပြီးပါပြီ',
+                                'Your payment of ' . number_format($invoice->total_amount) . ' MMK for Invoice #' . $invoice->invoice_number . ' has been verified.',
+                                '/invoices'
+                            );
                         }
                         $bankTx->update(['match_status' => 'matched']);
 
@@ -428,5 +457,28 @@ class ReconciliationEngineService
         }
 
         return $digits;
+    }
+
+    /**
+     * Dispatch an in-app notification to the customer (via direct user_id or matching phone).
+     */
+    protected function notifyCustomerForInvoice(Invoice $invoice, string $type, string $title, string $message, ?string $actionUrl = '/invoices'): void
+    {
+        $userId = $invoice->user_id;
+        if (! $userId && $invoice->customer_phone) {
+            $matchedUser = User::where('phone', $invoice->customer_phone)->first();
+            $userId = $matchedUser?->id;
+        }
+
+        if ($userId) {
+            AccountNotification::create([
+                'user_id'    => $userId,
+                'title'      => $title,
+                'message'    => $message,
+                'type'       => $type,
+                'action_url' => $actionUrl,
+                'read_at'    => null,
+            ]);
+        }
     }
 }

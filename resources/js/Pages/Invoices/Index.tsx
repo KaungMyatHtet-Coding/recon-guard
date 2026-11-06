@@ -1,8 +1,8 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import { FormEvent, useState } from 'react';
+import { Head, Link, usePage } from '@inertiajs/react';
+import { useState } from 'react';
 import { PageProps } from '@/types';
-
+import CreateInvoiceModal from './Partials/CreateInvoiceModal';
 interface InvoiceListItem {
     id: number;
     invoice_number: string;
@@ -52,24 +52,16 @@ export default function InvoicesIndex({
 }: InvoicesIndexProps) {
     const { auth } = usePage<PageProps>().props;
     const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
+    const [copiedInvoiceId, setCopiedInvoiceId] = useState<number | null>(null);
 
-    const { data: createData, setData: setCreateData, post: postCreate, processing: createProcessing, reset: resetCreate } = useForm({
-        user_id: customers[0]?.id || '',
-        amount: '',
-        expected_channel: 'any',
-        description: '',
-        due_date: '',
-    });
-
-    const handleCreateInvoice = (e: FormEvent) => {
-        e.preventDefault();
-        postCreate(route('invoices.store'), {
-            onSuccess: () => {
-                setShowCreateModal(false);
-                resetCreate();
-            },
+    const handleCopyPaymentLink = (invoiceNumber: string, invoiceId: number) => {
+        const link = window.location.origin + '/pay/' + invoiceNumber;
+        navigator.clipboard.writeText(link).then(() => {
+            setCopiedInvoiceId(invoiceId);
+            setTimeout(() => setCopiedInvoiceId(null), 2000);
         });
     };
+
 
     const formatMMK = (amount: number) => {
         return new Intl.NumberFormat('my-MM', {
@@ -197,64 +189,75 @@ export default function InvoicesIndex({
 
                 {/* Invoices List Table */}
                 <div className="overflow-hidden rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-[#161B26] shadow-sm">
-                    <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-800 text-left text-sm">
-                            <thead className="bg-slate-50/80 dark:bg-slate-900/60 text-xs uppercase tracking-wider text-slate-700 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-slate-800">
+                    <div className="w-full overflow-x-auto lg:overflow-x-visible">
+                        <table className="w-full table-auto divide-y divide-slate-200 dark:divide-slate-800 text-left text-xs">
+                            <thead className="bg-slate-50/80 dark:bg-slate-900/60 text-[11px] uppercase tracking-wider text-slate-700 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-slate-800">
                                 <tr>
-                                    <th className="px-6 py-3.5">Invoice #</th>
-                                    <th className="px-6 py-3.5">Customer & Phone</th>
-                                    <th className="px-6 py-3.5">Amount (MMK)</th>
-                                    <th className="px-6 py-3.5">Expected Channel</th>
-                                    <th className="px-6 py-3.5">Status</th>
-                                    <th className="px-6 py-3.5">Slips Uploaded</th>
-                                    <th className="px-6 py-3.5 text-right">Actions</th>
+                                    <th className="px-3 py-2.5">Invoice #</th>
+                                    <th className="px-3 py-2.5">Customer & Phone</th>
+                                    <th className="px-3 py-2.5">Amount (MMK)</th>
+                                    <th className="px-3 py-2.5">Expected Channel</th>
+                                    <th className="px-3 py-2.5">Status</th>
+                                    <th className="px-3 py-2.5">Slips</th>
+                                    <th className="px-3 py-2.5 text-right">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-200 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
                                 {invoices.data.length === 0 ? (
                                     <tr>
-                                        <td colSpan={7} className="px-6 py-12 text-center text-slate-500 dark:text-slate-400 text-sm">
+                                        <td colSpan={7} className="px-3 py-10 text-center text-slate-500 dark:text-slate-400 text-xs">
                                             No invoices found in this filter view.
                                         </td>
                                     </tr>
                                 ) : (
                                     invoices.data.map((inv) => (
                                         <tr key={inv.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
-                                            <td className="whitespace-nowrap px-6 py-4 font-mono font-bold text-[#705CF6] dark:text-indigo-400">
-                                                <Link href={route('invoices.show', inv.id)} className="hover:underline">
+                                            <td className="whitespace-nowrap px-3 py-2.5 font-mono font-semibold text-slate-900 dark:text-white">
+                                                <Link href={route('invoices.show', inv.id)} className="text-[#705CF6] dark:text-indigo-400 hover:underline">
                                                     {inv.invoice_number}
                                                 </Link>
                                             </td>
-                                            <td className="whitespace-nowrap px-6 py-4">
-                                                <div className="font-semibold text-slate-900 dark:text-white">{inv.customer_name}</div>
-                                                <div className="text-xs text-slate-500 dark:text-slate-400">{inv.customer_phone || '09#########'}</div>
+                                            <td className="px-3 py-2.5">
+                                                <div className="font-semibold text-slate-900 dark:text-white truncate max-w-[150px]">{inv.customer_name}</div>
+                                                <div className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">{inv.customer_phone || '09#########'}</div>
                                             </td>
-                                            <td className="whitespace-nowrap px-6 py-4 font-mono font-semibold text-slate-900 dark:text-white">
+                                            <td className="whitespace-nowrap px-3 py-2.5 font-mono font-semibold text-slate-900 dark:text-white">
                                                 {formatMMK(inv.amount)}
                                             </td>
-                                            <td className="whitespace-nowrap px-6 py-4">
+                                            <td className="whitespace-nowrap px-3 py-2.5">
                                                 {getChannelBadge(inv.expected_channel)}
                                             </td>
-                                            <td className="whitespace-nowrap px-6 py-4">
+                                            <td className="whitespace-nowrap px-3 py-2.5">
                                                 {getStatusBadge(inv.status)}
                                             </td>
-                                            <td className="whitespace-nowrap px-6 py-4">
-                                                <span className={`inline-flex items-center px-2 py-0.5 rounded-lg text-xs font-semibold ${
+                                            <td className="whitespace-nowrap px-3 py-2.5">
+                                                <span className={`inline-flex items-center px-2 py-0.5 rounded-lg text-[11px] font-semibold ${
                                                     inv.payment_slips_count > 0 ? 'bg-sky-50 dark:bg-sky-950 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
                                                 }`}>
                                                     {inv.payment_slips_count} {inv.payment_slips_count === 1 ? 'Slip' : 'Slips'}
                                                 </span>
                                             </td>
-                                            <td className="whitespace-nowrap px-6 py-4 text-right">
-                                                <Link
-                                                    href={route('invoices.show', inv.id)}
-                                                    className="inline-flex items-center px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition gap-1"
-                                                >
-                                                    <span>View / Upload Slip</span>
-                                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                                                    </svg>
-                                                </Link>
+                                            <td className="whitespace-nowrap px-3 py-2.5 text-right">
+                                                <div className="flex items-center justify-end gap-1.5">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleCopyPaymentLink(inv.invoice_number, inv.id)}
+                                                        className="inline-flex items-center px-2.5 py-1 rounded-xl text-xs font-semibold bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 transition"
+                                                        title="Copy guest payment link"
+                                                    >
+                                                        {copiedInvoiceId === inv.id ? (
+                                                            <span>✓ Copied!</span>
+                                                        ) : (
+                                                            <span>📋 Copy Link</span>
+                                                        )}
+                                                    </button>
+                                                    <Link
+                                                        href={route('invoices.show', inv.id)}
+                                                        className="inline-flex items-center px-2.5 py-1 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition"
+                                                    >
+                                                        <span>View Details →</span>
+                                                    </Link>
+                                                </div>
                                             </td>
                                         </tr>
                                     ))
@@ -284,113 +287,12 @@ export default function InvoicesIndex({
                 </div>
             </div>
 
-            {/* Create Invoice Modal (For Admin & Accountant) */}
-            {showCreateModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-                    <div className="w-full max-w-lg rounded-2xl bg-white dark:bg-[#161B26] border border-slate-200 dark:border-slate-800 p-6 shadow-2xl space-y-4">
-                        <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
-                            <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                                <span className="p-1.5 rounded-xl bg-[#705CF6]/10 text-[#705CF6]">
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                    </svg>
-                                </span>
-                                Issue New Commercial Invoice
-                            </h3>
-                            <button
-                                type="button"
-                                onClick={() => setShowCreateModal(false)}
-                                className="text-slate-400 hover:text-slate-600 dark:hover:text-white p-1 rounded-lg"
-                            >
-                                ✕
-                            </button>
-                        </div>
-
-                        <form onSubmit={handleCreateInvoice} className="space-y-4">
-                            <div>
-                                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                                    Target Customer Account
-                                </label>
-                                <select
-                                    value={createData.user_id}
-                                    onChange={(e) => setCreateData('user_id', e.target.value)}
-                                    required
-                                    className="w-full rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-sm text-slate-900 dark:text-white"
-                                >
-                                    {customers.map((c) => (
-                                        <option key={c.id} value={c.id}>
-                                            {c.name} {c.company_name ? `(${c.company_name})` : ''} — {c.email}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                                        Amount (MMK)
-                                    </label>
-                                    <input
-                                        type="number"
-                                        value={createData.amount}
-                                        onChange={(e) => setCreateData('amount', e.target.value)}
-                                        required
-                                        placeholder="250000"
-                                        className="w-full rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-sm text-slate-900 dark:text-white"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                                        Expected Channel
-                                    </label>
-                                    <select
-                                        value={createData.expected_channel}
-                                        onChange={(e) => setCreateData('expected_channel', e.target.value)}
-                                        className="w-full rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-sm text-slate-900 dark:text-white"
-                                    >
-                                        <option value="any">Any Mobile Wallet / Bank</option>
-                                        <option value="kbzpay">KBZPay (KPay)</option>
-                                        <option value="wavepay">WavePay</option>
-                                        <option value="cbpay">CB Pay</option>
-                                        <option value="ayapay">AYA Pay</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                                    Description / Line Items
-                                </label>
-                                <input
-                                    type="text"
-                                    value={createData.description}
-                                    onChange={(e) => setCreateData('description', e.target.value)}
-                                    placeholder="Quarterly Server Hardware Deposit"
-                                    className="w-full rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-sm text-slate-900 dark:text-white"
-                                />
-                            </div>
-
-                            <div className="flex items-center justify-end gap-3 pt-3">
-                                <button
-                                    type="button"
-                                    onClick={() => setShowCreateModal(false)}
-                                    className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={createProcessing}
-                                    className="px-5 py-2 rounded-xl bg-[#705CF6] hover:bg-[#5f4be3] text-xs font-semibold text-white shadow-sm transition disabled:opacity-50"
-                                >
-                                    {createProcessing ? 'Creating...' : 'Issue Invoice'}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
+            {/* Create Invoice Modal with Guest & Registered Support */}
+            <CreateInvoiceModal
+                show={showCreateModal}
+                onClose={() => setShowCreateModal(false)}
+                customers={customers}
+            />
         </AuthenticatedLayout>
     );
 }

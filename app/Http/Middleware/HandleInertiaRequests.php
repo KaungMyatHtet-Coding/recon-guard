@@ -49,6 +49,8 @@ class HandleInertiaRequests extends Middleware
                     'blacklist_reason' => $user->blacklist_reason,
                     'roles' => $user->getRoleNames(),
                 ] : null,
+                'unread_notifications_count' => $user ? fn () => $user->accountNotifications()->whereNull('read_at')->count() : 0,
+                'recent_notifications' => $user ? fn () => $user->accountNotifications()->latest()->limit(10)->get() : [],
             ],
             'notifications' => $user ? fn () => $user->accountNotifications()->latest()->limit(10)->get() : [],
             'unread_notifications_count' => $user ? fn () => $user->accountNotifications()->whereNull('read_at')->count() : 0,

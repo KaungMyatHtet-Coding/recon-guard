@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AccountNotification;
 use App\Models\BankStatementBatch;
 use App\Models\BankTransaction;
+use App\Models\User;
 use App\Services\BankStatementIngestionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -157,6 +159,18 @@ class BankStatementController extends Controller
             'rollback_requested_at' => now(),
             'rollback_requested_by' => $request->user()->id,
         ]);
+
+        // Dispatch notification to all Chief Auditors (role:admin)
+        $admins = User::role('admin')->get();
+        foreach ($admins as $admin) {
+            AccountNotification::create([
+                'user_id'    => $admin->id,
+                'title'      => 'Bank Statement Rollback Request / ဘဏ်စာရင်းဖျက်သိမ်းရန် တောင်းဆိုချက်',
+                'message'    => "Senior Accountant requested rollback for batch '{$batch->original_filename}'. Reason: {$validated['reason']}",
+                'type'       => 'warning',
+                'action_url' => '/admin/rollbacks',
+            ]);
+        }
 
         return redirect()->back()
             ->with('success', "Rollback request for batch '{$batch->original_filename}' submitted successfully for Chief Auditor review.");

@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AccountNotification;
 use App\Models\SupportAppeal;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -23,13 +25,25 @@ class SupportAppealController extends Controller
             'message.min' => 'The appeal explanation must be at least 10 characters.',
         ]);
 
-        SupportAppeal::create([
+        $appeal = SupportAppeal::create([
             'user_id' => $request->user()->id,
             'subject' => $request->input('subject'),
             'message' => $request->input('message'),
             'contact_phone' => $request->input('contact_phone') ?: $request->user()->phone,
             'status' => 'pending',
         ]);
+
+        // Dispatch notification to all Chief Auditors (role:admin)
+        $admins = User::role('admin')->get();
+        foreach ($admins as $admin) {
+            AccountNotification::create([
+                'user_id'    => $admin->id,
+                'title'      => 'New Compliance Dispute Appeal / အယူခံလွှာအသစ် ရောက်ရှိပါသည်',
+                'message'    => "Customer submitted an appeal ticket: '{$appeal->subject}'.",
+                'type'       => 'info',
+                'action_url' => '/admin/blacklist',
+            ]);
+        }
 
         return back()->with('success', 'Your compliance appeal has been submitted successfully. Our Chief Auditor & Dispute Desk will review your explanation.');
     }

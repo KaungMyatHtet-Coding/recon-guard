@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AccountNotification;
 use App\Models\BankTransaction;
 use App\Models\Invoice;
 use App\Models\ReconciliationMatch;
+use App\Models\User;
 use App\Services\ReconciliationEngineService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -190,6 +192,20 @@ class ReconciliationController extends Controller
 
             if ($match->invoice) {
                 $match->invoice->update(['status' => 'reconciled']);
+                $userId = $match->invoice->user_id;
+                if (! $userId && $match->invoice->customer_phone) {
+                    $matchedUser = User::where('phone', $match->invoice->customer_phone)->first();
+                    $userId = $matchedUser?->id;
+                }
+                if ($userId) {
+                    AccountNotification::create([
+                        'user_id'    => $userId,
+                        'title'      => 'Payment Verified / ငွေပေးချေမှု အတည်ပြုပြီးပါပြီ',
+                        'message'    => 'Your payment of ' . number_format($match->invoice->total_amount) . ' MMK for Invoice #' . $match->invoice->invoice_number . ' has been verified.',
+                        'type'       => 'success',
+                        'action_url' => '/invoices',
+                    ]);
+                }
             }
             if ($match->paymentSlip) {
                 $match->paymentSlip->update(['verification_status' => 'matched']);
@@ -228,6 +244,20 @@ class ReconciliationController extends Controller
 
             if ($match->invoice) {
                 $match->invoice->update(['status' => 'fraud_flagged']);
+                $userId = $match->invoice->user_id;
+                if (! $userId && $match->invoice->customer_phone) {
+                    $matchedUser = User::where('phone', $match->invoice->customer_phone)->first();
+                    $userId = $matchedUser?->id;
+                }
+                if ($userId) {
+                    AccountNotification::create([
+                        'user_id'    => $userId,
+                        'title'      => 'Payment Review Required / ငွေပေးချေမှု စစ်ဆေးမှု လိုအပ်သည်',
+                        'message'    => 'A discrepancy was detected in your submitted payment slip for Invoice #' . $match->invoice->invoice_number . '. Please contact our support team.',
+                        'type'       => 'warning',
+                        'action_url' => '/invoices',
+                    ]);
+                }
             }
             if ($match->paymentSlip) {
                 $match->paymentSlip->update(['verification_status' => 'tampered_fraud']);

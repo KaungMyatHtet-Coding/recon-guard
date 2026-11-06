@@ -15,6 +15,7 @@ class AccountNotification extends Model
         'type',
         'title',
         'message',
+        'action_url',
         'read_at',
     ];
 

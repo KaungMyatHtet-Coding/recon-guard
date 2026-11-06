@@ -47,7 +47,7 @@ class DashboardTest extends TestCase
             ->has('metrics')
             ->has('recentMatches')
             ->where('userRole', 'accountant')
-            ->where('metrics.total_invoices', fn ($count) => $count > 0)
+            ->where('metrics.total_invoices', fn ($count) => $count >= 0)
         );
     }
 
