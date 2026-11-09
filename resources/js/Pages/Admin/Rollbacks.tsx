@@ -1,4 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import ConfirmModal from '@/Components/ConfirmModal';
 import { Head, Link, router } from '@inertiajs/react';
 import React, { useState } from 'react';
 
@@ -38,29 +39,87 @@ interface Props {
 export default function Rollbacks({ pendingBatches, stats }: Props) {
     const [processingId, setProcessingId] = useState<number | null>(null);
 
+    const [confirmModal, setConfirmModal] = useState<{
+        show: boolean;
+        title: string;
+        description: React.ReactNode;
+        confirmText: string;
+        cancelText: string;
+        variant: 'danger' | 'warning' | 'primary';
+        onConfirm: () => void;
+    }>({
+        show: false,
+        title: '',
+        description: null,
+        confirmText: '',
+        cancelText: 'Cancel',
+        variant: 'danger',
+        onConfirm: () => {},
+    });
+
     const formatMmk = (amount: string | number) => {
         const num = typeof amount === 'number' ? amount : parseFloat(amount);
         return isNaN(num) ? '0.00' : num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     };
 
     const handleApprove = (batch: BatchItem) => {
-        if (confirm(`MAKER-CHECKER PURGE CONFIRMATION:\n\nAre you sure you want to approve rollback and PERMANENTLY PURGE batch "${batch.original_filename}"?\n\nThis will permanently delete ${batch.total_records} bank transactions (${formatMmk(batch.total_credit_amount)} MMK) from the official ledger.`)) {
-            setProcessingId(batch.id);
-            router.delete(route('admin.rollbacks.approve', batch.id), {
-                preserveScroll: true,
-                onFinish: () => setProcessingId(null),
-            });
-        }
+        setConfirmModal({
+            show: true,
+            title: 'Approve Rollback & Purge Batch?',
+            variant: 'danger',
+            confirmText: 'Confirm Permanent Purge',
+            cancelText: 'Cancel',
+            description: (
+                <div className="space-y-3">
+                    <p>
+                        Are you sure you want to approve rollback and <strong className="text-rose-600 dark:text-rose-400">PERMANENTLY PURGE</strong> batch <strong className="text-slate-900 dark:text-white">"{batch.original_filename}"</strong>?
+                    </p>
+                    <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 text-xs space-y-1">
+                        <div>Affected Records: <strong className="font-mono text-slate-900 dark:text-white">{batch.total_records} transactions</strong></div>
+                        <div>Total Volume: <strong className="font-mono text-rose-600 dark:text-rose-400">{formatMmk(batch.total_credit_amount)} MMK</strong></div>
+                    </div>
+                    <p className="text-[11px] text-slate-500">
+                        This action deletes the batch and its transactions from the official ledger permanently under Maker-Checker governance.
+                    </p>
+                </div>
+            ),
+            onConfirm: () => {
+                setConfirmModal((prev) => ({ ...prev, show: false }));
+                setProcessingId(batch.id);
+                router.delete(route('admin.rollbacks.approve', batch.id), {
+                    preserveScroll: true,
+                    onFinish: () => setProcessingId(null),
+                });
+            },
+        });
     };
 
     const handleDismiss = (batch: BatchItem) => {
-        if (confirm(`Dismiss rollback request for batch "${batch.original_filename}"?\n\nThe batch will remain active in the ledger.`)) {
-            setProcessingId(batch.id);
-            router.patch(route('admin.rollbacks.dismiss', batch.id), {}, {
-                preserveScroll: true,
-                onFinish: () => setProcessingId(null),
-            });
-        }
+        setConfirmModal({
+            show: true,
+            title: 'Dismiss Rollback Request?',
+            variant: 'warning',
+            confirmText: 'Dismiss Request',
+            cancelText: 'Keep in Queue',
+            description: (
+                <div className="space-y-2">
+                    <p>
+                        Dismiss rollback request for batch <strong className="text-slate-900 dark:text-white">"{batch.original_filename}"</strong>?
+                    </p>
+                    <p className="text-[11px] text-slate-500">
+                        The batch and its transactions will remain active in the official ledger.
+                    </p>
+                </div>
+            ),
+            onConfirm: () => {
+                setConfirmModal((prev) => ({ ...prev, show: false }));
+                setProcessingId(batch.id);
+                router.patch(route('admin.rollbacks.dismiss', batch.id), {}, {
+                    preserveScroll: true,
+                    onFinish: () => setProcessingId(null),
+                });
+            },
+        });
     };
 
     const getChannelBadge = (ch: string) => {
@@ -320,6 +379,18 @@ export default function Rollbacks({ pendingBatches, stats }: Props) {
                     )}
                 </div>
             </div>
+
+            {/* Maker-Checker Purge / Dismiss ConfirmModal */}
+            <ConfirmModal
+                show={confirmModal.show}
+                title={confirmModal.title}
+                description={confirmModal.description}
+                confirmText={confirmModal.confirmText}
+                cancelText={confirmModal.cancelText}
+                variant={confirmModal.variant}
+                onClose={() => setConfirmModal((prev) => ({ ...prev, show: false }))}
+                onConfirm={confirmModal.onConfirm}
+            />
         </AuthenticatedLayout>
     );
 }

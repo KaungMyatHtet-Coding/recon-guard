@@ -8,6 +8,8 @@ import ThemeToggle from '@/Components/ThemeToggle';
 interface InvoiceData {
     id: number;
     invoice_number: string;
+    customer_name_masked?: string | null;
+    customer_phone_masked?: string | null;
     description: string;
     issued_at: string;
     total_amount: number;
@@ -175,6 +177,21 @@ export default function PayInvoice({ invoice }: PageProps) {
                                     : (isMm ? 'ပေးချေရန်ကျန်' : 'UNPAID')}
                             </span>
                         </div>
+                        {/* PII Masked Customer Pill */}
+                        {(invoice.customer_name_masked || invoice.customer_phone_masked) && (
+                            <div className="mb-4 flex flex-wrap items-center gap-2 text-xs">
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 font-mono border border-slate-200 dark:border-slate-700/60">
+                                    <span>👤</span>
+                                    <span className="font-semibold">{invoice.customer_name_masked || 'Customer'}</span>
+                                    {invoice.customer_phone_masked && (
+                                        <span className="text-slate-500 dark:text-slate-400">({invoice.customer_phone_masked})</span>
+                                    )}
+                                </span>
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900/50">
+                                    🛡️ {isMm ? 'လုံခြုံရေးအရ အချက်အလက်ဖျောက်ထားသည်' : 'PII Masked for Privacy'}
+                                </span>
+                            </div>
+                        )}
                         <div className="text-slate-700 dark:text-slate-300 text-sm mb-4 leading-relaxed">
                             {invoice.description}
                         </div>

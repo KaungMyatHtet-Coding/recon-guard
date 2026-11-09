@@ -1,11 +1,26 @@
 import LanguageSwitcher from '@/Components/LanguageSwitcher';
 import ThemeToggle from '@/Components/ThemeToggle';
+import { useLanguage } from '@/Contexts/LanguageContext';
 import { Link } from '@inertiajs/react';
 import { PropsWithChildren } from 'react';
 
 export default function Guest({ children }: PropsWithChildren) {
+    const { language } = useLanguage();
+    const isMm = language === 'mm';
+
     return (
         <div className="flex min-h-screen flex-col items-center justify-center bg-[#F8FAFC] dark:bg-[#0B0D14] p-4 text-slate-900 dark:text-[#F8FAFC] transition-colors duration-200 relative selection:bg-[#705CF6] selection:text-white">
+            {/* Top Left Navigation: Back to Home */}
+            <div className="absolute top-4 left-4">
+                <Link
+                    href="/"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 backdrop-blur transition shadow-xs"
+                >
+                    <span className="text-sm">←</span>
+                    <span>{isMm ? 'ပင်မစာမျက်နှာသို့' : 'Back to Home'}</span>
+                </Link>
+            </div>
+
             {/* Top Right Controls */}
             <div className="absolute top-4 right-4 flex items-center gap-2">
                 <LanguageSwitcher />

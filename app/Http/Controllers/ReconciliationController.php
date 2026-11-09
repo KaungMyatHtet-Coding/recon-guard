@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\AccountNotification;
 use App\Models\BankTransaction;
+use App\Models\BlacklistRecommendation;
 use App\Models\Invoice;
 use App\Models\ReconciliationMatch;
 use App\Models\User;
+use App\Services\AuditDateFilterService;
 use App\Services\ReconciliationEngineService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -25,7 +27,7 @@ class ReconciliationController extends Controller
      */
     public function index(Request $request): Response
     {
-        $tab = $request->query('tab', 'all');
+        $tab = $request->query('status', $request->query('tab', 'all'));
         $channel = $request->query('channel', 'all');
         $search = $request->query('search', '');
 
@@ -104,8 +106,11 @@ class ReconciliationController extends Controller
             });
         }
 
+        // Date Scoping & Interactive Calendar Filtering
+        $dateFilters = AuditDateFilterService::apply($matchesQuery, $request, 'created_at');
+
         $matches = $matchesQuery->latest('id')
-            ->paginate(15)
+            ->paginate(20)
             ->withQueryString();
 
         // Suspense Transactions (for Suspense Ledger tab)
@@ -127,7 +132,7 @@ class ReconciliationController extends Controller
         }
 
         $suspenseItems = $suspenseQuery->latest('id')
-            ->paginate(15, ['*'], 'suspense_page')
+            ->paginate(20, ['*'], 'suspense_page')
             ->withQueryString();
 
         return Inertia::render('Reconciliation/Index', [
@@ -146,10 +151,16 @@ class ReconciliationController extends Controller
             'matches' => $matches,
             'suspenseItems' => $suspenseItems,
             'filters' => [
-                'tab' => $tab,
-                'channel' => $channel,
-                'search' => $search,
+                'tab'         => $tab,
+                'channel'     => $channel,
+                'search'      => $search,
+                'date_scope'  => $dateFilters['date_scope'],
+                'start_date'  => $dateFilters['start_date'],
+                'end_date'    => $dateFilters['end_date'],
+                'single_date' => $dateFilters['single_date'],
             ],
+            'scopeSummary' => $dateFilters['scope_summary'],
+            'isDefaultScope' => $dateFilters['is_default'],
         ]);
     }
 
@@ -269,5 +280,51 @@ class ReconciliationController extends Controller
 
         return redirect()->route('reconciliation.index')
             ->with('success', "Match #{$match->id} was flagged as fraud/discrepancy.");
+    }
+
+    /**
+     * Submit a staff blacklist recommendation to Chief Auditor (Four-Eyes principle).
+     */
+    public function recommendBlacklist(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'customer_name'  => ['required', 'string', 'max:255'],
+            'customer_phone' => ['required', 'string', 'max:50'],
+            'reason'         => ['required', 'string', 'max:1000'],
+            'target_user_id' => ['nullable', 'exists:users,id'],
+            'invoice_id'     => ['nullable', 'exists:invoices,id'],
+        ]);
+
+        $recommendation = BlacklistRecommendation::create([
+            'recommended_by' => $request->user()->id,
+            'target_user_id' => $validated['target_user_id'] ?? null,
+            'customer_name'  => $validated['customer_name'],
+            'customer_phone' => $validated['customer_phone'],
+            'reason'         => $validated['reason'],
+            'invoice_id'     => $validated['invoice_id'] ?? null,
+            'status'         => 'pending',
+        ]);
+
+        // Dispatch in-app notification to all Chief Auditors
+        $admins = User::role('admin')->get();
+        foreach ($admins as $admin) {
+            AccountNotification::create([
+                'user_id'    => $admin->id,
+                'title'      => 'Blacklist Recommendation / အမည်ပျက်စာရင်းသွင်းရန် အကြံပြုချက်',
+                'message'    => "Senior Accountant recommended blacklisting '{$recommendation->customer_name}' ({$recommendation->customer_phone}). Reason: {$recommendation->reason}",
+                'type'       => 'warning',
+                'action_url' => '/admin/blacklist',
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Fraud blacklist recommendation submitted for Chief Auditor four-eyes review.');
+    }
+
+    /**
+     * Alias for official audit report.
+     */
+    public function auditReport(Request $request): Response
+    {
+        return app(\App\Http\Controllers\Admin\AuditReportController::class)->index($request);
     }
 }

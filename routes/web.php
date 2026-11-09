@@ -65,6 +65,8 @@ Route::middleware(['auth', 'verified', 'role:admin|accountant'])->prefix('reconc
     Route::post('/run', [ReconciliationController::class, 'run'])->name('run');
     Route::patch('/matches/{match}/approve', [ReconciliationController::class, 'approve'])->name('approve');
     Route::patch('/matches/{match}/reject', [ReconciliationController::class, 'reject'])->name('reject');
+    Route::post('/recommend-blacklist', [ReconciliationController::class, 'recommendBlacklist'])->name('recommend-blacklist');
+    Route::get('/audit-report', [ReconciliationController::class, 'auditReport'])->name('audit-report');
 });
 
 // Phase 6: Chief Auditor Passcode Gate (Admin only)
@@ -81,10 +83,15 @@ Route::middleware(['auth', 'verified', 'role:admin', 'admin_passcode'])->prefix(
     // Dedicated Fraud Defense & Blacklist Management Center
     Route::get('/blacklist', [AdminBlacklistController::class, 'index'])->name('blacklist.index');
     Route::post('/blacklist/{user}', [AdminBlacklistController::class, 'toggleBlacklist'])->name('blacklist.toggle');
+    Route::delete('/blacklist/{blacklist}/unblock', [AdminBlacklistController::class, 'unblock'])->name('blacklist.unblock');
     Route::post('/appeals/{appeal}/resolve', [AdminBlacklistController::class, 'resolveAppeal'])->name('appeals.resolve');
 
     // Phase 8B: Compliance Appeals Resolve via PATCH
     Route::patch('/appeals/{appeal}/resolve', [AdminBlacklistController::class, 'resolveAppeal'])->name('appeals.resolve.patch');
+
+    // Phase 8B-2: Four-Eyes Blacklist Recommendations (Chief Auditor Review)
+    Route::patch('/blacklist-recommendations/{recommendation}/approve', [AdminBlacklistController::class, 'approveRecommendation'])->name('blacklist-recommendations.approve');
+    Route::patch('/blacklist-recommendations/{recommendation}/dismiss', [AdminBlacklistController::class, 'dismissRecommendation'])->name('blacklist-recommendations.dismiss');
 
     // Phase 8B: Pending Rollbacks Queue (Chief Auditor Approval)
     Route::get('/rollbacks', [AdminRollbackController::class, 'index'])->name('rollbacks.index');
@@ -94,6 +101,7 @@ Route::middleware(['auth', 'verified', 'role:admin', 'admin_passcode'])->prefix(
     // Phase 8B: Staff & User Management (Chief Auditor Governance)
     Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
     Route::post('/users', [AdminUserController::class, 'store'])->name('users.store');
+    Route::post('/users/accountant', [AdminUserController::class, 'store'])->name('users.accountant.store');
     Route::get('/users/{user}', [AdminUserController::class, 'show'])->name('users.show');
 });
 

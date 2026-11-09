@@ -6,6 +6,7 @@ use App\Models\AccountNotification;
 use App\Models\BankStatementBatch;
 use App\Models\BankTransaction;
 use App\Models\User;
+use App\Services\AuditDateFilterService;
 use App\Services\BankStatementIngestionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -43,7 +44,7 @@ class BankStatementController extends Controller
         // Batches List
         $batches = BankStatementBatch::with(['uploader:id,name,email', 'rollbackRequester:id,name,email'])
             ->latest('id')
-            ->paginate(8, ['*'], 'batches_page')
+            ->paginate(20, ['*'], 'batches_page')
             ->withQueryString();
 
         // Filterable Bank Transaction Ledger
@@ -66,8 +67,11 @@ class BankStatementController extends Controller
             });
         }
 
+        // Date Scoping & Interactive Calendar Filtering on transactions
+        $dateFilters = AuditDateFilterService::apply($txQuery, $request, 'transaction_datetime');
+
         $transactions = $txQuery->latest('id')
-            ->paginate(15, ['*'], 'tx_page')
+            ->paginate(20, ['*'], 'tx_page')
             ->withQueryString();
 
         return Inertia::render('BankStatements/Index', [
@@ -82,10 +86,16 @@ class BankStatementController extends Controller
             'batches' => $batches,
             'transactions' => $transactions,
             'filters' => [
-                'channel' => $channelFilter ?: 'all',
-                'status' => $statusFilter ?: 'all',
-                'search' => $search ?: '',
+                'channel'     => $channelFilter ?: 'all',
+                'status'      => $statusFilter ?: 'all',
+                'search'      => $search ?: '',
+                'date_scope'  => $dateFilters['date_scope'],
+                'start_date'  => $dateFilters['start_date'],
+                'end_date'    => $dateFilters['end_date'],
+                'single_date' => $dateFilters['single_date'],
             ],
+            'scopeSummary' => $dateFilters['scope_summary'],
+            'isDefaultScope' => $dateFilters['is_default'],
         ]);
     }
 

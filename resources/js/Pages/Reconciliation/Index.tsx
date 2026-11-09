@@ -2,6 +2,8 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { useLanguage } from '@/Contexts/LanguageContext';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import React, { useState } from 'react';
+import AuditFilterToolbar, { FilterState, StatusOption } from '@/Components/AuditFilterToolbar';
+import RecommendBlacklistModal from '@/Components/RecommendBlacklistModal';
 
 interface InvoiceData {
     id: number;
@@ -103,21 +105,16 @@ interface Props {
     };
     matches: PaginatedData<MatchRecord>;
     suspenseItems: PaginatedData<BankTxData>;
-    filters: {
-        tab: string;
-        channel: string;
-        search: string;
-    };
+    filters: FilterState;
+    scopeSummary?: string;
+    isDefaultScope?: boolean;
 }
 
-export default function Index({ metrics, matches, suspenseItems, filters }: Props) {
+export default function Index({ metrics, matches, suspenseItems, filters = {}, scopeSummary, isDefaultScope = true }: Props) {
     const page = usePage();
     const flash = (page.props as any).flash || {};
     const { t } = useLanguage();
 
-    const [currentTab, setCurrentTab] = useState<string>(filters.tab || 'all');
-    const [currentChannel, setCurrentChannel] = useState<string>(filters.channel || 'all');
-    const [searchTerm, setSearchTerm] = useState<string>(filters.search || '');
     const [runChannel, setRunChannel] = useState<string>('all');
     const [isRunning, setIsRunning] = useState<boolean>(false);
 
@@ -129,21 +126,67 @@ export default function Index({ metrics, matches, suspenseItems, filters }: Prop
     const [rejectReason, setRejectReason] = useState<string>('');
     const [approveNote, setApproveNote] = useState<string>('');
 
-    const handleFilterSubmit = (tabVal?: string, chVal?: string, searchVal?: string) => {
-        const query: Record<string, string> = {};
-        const t = tabVal !== undefined ? tabVal : currentTab;
-        const c = chVal !== undefined ? chVal : currentChannel;
-        const s = searchVal !== undefined ? searchVal : searchTerm;
+    // Blacklist Recommendation Modal state
+    const [flagModalOpen, setFlagModalOpen] = useState<boolean>(false);
+    const [targetForFlag, setTargetForFlag] = useState<{
+        customerName: string;
+        customerPhone: string;
+        targetUserId?: number | null;
+        invoiceId?: number | null;
+        reason?: string;
+    }>({ customerName: '', customerPhone: '' });
 
-        if (t && t !== 'all') query.tab = t;
-        if (c && c !== 'all') query.channel = c;
-        if (s && s.trim()) query.search = s.trim();
+    const handleOpenFlagModal = (m: MatchRecord) => {
+        const customerName = m.invoice?.customer_name || m.payment_slip?.sender_name || m.bank_transaction?.sender_name || 'Guest Customer';
+        const customerPhone = m.invoice?.customer_phone || m.payment_slip?.sender_phone || m.bank_transaction?.sender_phone || '';
+        const targetUserId = m.invoice?.customer?.id || null;
+        const invoiceId = m.invoice?.id || null;
+        const reason = `Flagged from Reconciliation Match #${m.id} (${m.match_type}). Detected variance or fraudulent submission.`;
 
+        setTargetForFlag({
+            customerName,
+            customerPhone,
+            targetUserId,
+            invoiceId,
+            reason,
+        });
+        setFlagModalOpen(true);
+    };
+
+    const handleFilterChange = (newFilters: Partial<FilterState>) => {
+        const merged = {
+            ...filters,
+            ...newFilters,
+        };
+        const query: Record<string, any> = {};
+        Object.entries(merged).forEach(([k, v]) => {
+            if (v !== null && v !== undefined && v !== '') {
+                query[k] = v;
+            }
+        });
         router.get(route('reconciliation.index'), query, {
             preserveState: true,
             preserveScroll: true,
         });
     };
+
+    const statusOptions: StatusOption[] = [
+        { value: 'all', label: 'All Audit Records' },
+        { value: 'exact', label: 'Exact & Fee-Adjusted' },
+        { value: 'pending_review', label: `Fuzzy Review Needed (${metrics.pending_reviews_count})` },
+        { value: 'fraud', label: `Fraud & Discrepancies (${metrics.fraud_alerts_count})` },
+        { value: 'suspense', label: `Suspense Ledger (${metrics.suspense_txns_count})` },
+    ];
+
+    const channelOptions = [
+        { value: 'all', label: 'All Channels' },
+        { value: 'kbzpay', label: 'KBZPay' },
+        { value: 'wavepay', label: 'WavePay' },
+        { value: 'cbpay', label: 'CB Pay' },
+        { value: 'ayapay', label: 'AYA Pay' },
+    ];
+
+    const activeTab = filters.tab || filters.status || 'all';
 
     const handleRunReconciliation = () => {
         setIsRunning(true);
@@ -421,82 +464,23 @@ export default function Index({ metrics, matches, suspenseItems, filters }: Prop
 
                 {/* Audit Feed & Workbench */}
                 <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-[#161B26] p-6 shadow-sm space-y-4">
-                    {/* Filter Tabs */}
-                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 border-b border-slate-100 dark:border-slate-800/80 pb-4">
-                        <div className="flex flex-wrap items-center gap-1.5">
-                            {[
-                                { id: 'all', label: 'All Audit Records' },
-                                { id: 'exact', label: 'Exact & Fee-Adjusted' },
-                                { id: 'pending_review', label: `Fuzzy Review Needed (${metrics.pending_reviews_count})` },
-                                { id: 'fraud', label: `Fraud & Discrepancies (${metrics.fraud_alerts_count})` },
-                                { id: 'suspense', label: `Suspense Ledger (${metrics.suspense_txns_count})` },
-                            ].map((tab) => (
-                                <button
-                                    key={tab.id}
-                                    type="button"
-                                    onClick={() => {
-                                        setCurrentTab(tab.id);
-                                        handleFilterSubmit(tab.id, currentChannel, searchTerm);
-                                    }}
-                                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${
-                                        currentTab === tab.id
-                                            ? 'bg-[#705CF6] text-white shadow-sm'
-                                            : 'bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200 border border-slate-200 dark:border-slate-800'
-                                    }`}
-                                >
-                                    {tab.label}
-                                </button>
-                            ))}
-                        </div>
-
-                        {/* Search & Channel Filters */}
-                        <div className="flex items-center gap-2">
-                            <select
-                                value={currentChannel}
-                                onChange={(e) => {
-                                    setCurrentChannel(e.target.value);
-                                    handleFilterSubmit(currentTab, e.target.value, searchTerm);
-                                }}
-                                className="rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-1.5 text-xs text-slate-900 dark:text-slate-200 focus:border-[#705CF6] focus:ring-1 focus:ring-[#705CF6]"
-                            >
-                                <option value="all">All Channels</option>
-                                <option value="kbzpay">KBZPay</option>
-                                <option value="wavepay">WavePay</option>
-                                <option value="cbpay">CB Pay</option>
-                                <option value="ayapay">AYA Pay</option>
-                            </select>
-
-                            <div className="relative w-48 sm:w-60">
-                                <input
-                                    type="text"
-                                    placeholder="Search Invoice #, Txn ID, Phone..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'Enter') {
-                                            handleFilterSubmit(currentTab, currentChannel, searchTerm);
-                                        }
-                                    }}
-                                    className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-1.5 text-xs text-slate-900 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:border-[#705CF6] focus:ring-1 focus:ring-[#705CF6]"
-                                />
-                                {searchTerm && (
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setSearchTerm('');
-                                            handleFilterSubmit(currentTab, currentChannel, '');
-                                        }}
-                                        className="absolute right-2.5 top-2 text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-                                    >
-                                        ✕
-                                    </button>
-                                )}
-                            </div>
-                        </div>
-                    </div>
+                    {/* Audit Scope & Filter Toolbar */}
+                    <AuditFilterToolbar
+                        filters={{
+                            ...filters,
+                            status: activeTab,
+                        }}
+                        onFilterChange={handleFilterChange}
+                        statusOptions={statusOptions}
+                        channelOptions={channelOptions}
+                        searchPlaceholder="Search Invoice #, Txn ID, Phone, Customer..."
+                        totalRecords={activeTab === 'suspense' ? suspenseItems.total : matches.total}
+                        scopeSummary={scopeSummary}
+                        isDefaultScope={isDefaultScope}
+                    />
 
                     {/* Standard Matches Table or Suspense Ledger */}
-                    {currentTab === 'suspense' ? (
+                    {activeTab === 'suspense' ? (
                         // Suspense Ledger View
                         <div className="space-y-4">
                             <div className="p-3 rounded-xl bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-800/40 text-xs text-orange-800 dark:text-orange-200 flex items-center justify-between">
@@ -674,6 +658,14 @@ export default function Index({ metrics, matches, suspenseItems, filters }: Prop
                                                     >
                                                         <span>🔍</span> Compare 3-Way
                                                     </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleOpenFlagModal(m)}
+                                                        className="inline-flex items-center gap-1 rounded-xl border border-rose-300 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/40 px-2.5 py-1 text-xs font-semibold text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900/60 transition shadow-sm"
+                                                        title="Recommend customer for Blacklist"
+                                                    >
+                                                        <span>🚩</span> Flag
+                                                    </button>
                                                 </td>
                                             </tr>
                                         ))
@@ -684,7 +676,7 @@ export default function Index({ metrics, matches, suspenseItems, filters }: Prop
                     )}
 
                     {/* Pagination */}
-                    {matches.links && matches.links.length > 3 && currentTab !== 'suspense' && (
+                    {matches.links && matches.links.length > 3 && activeTab !== 'suspense' && (
                         <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-800/80 pt-4 mt-2 text-xs">
                             <span className="text-slate-600 dark:text-slate-400">
                                 Page {matches.current_page} of {matches.last_page} ({matches.total} records)
@@ -893,6 +885,14 @@ export default function Index({ metrics, matches, suspenseItems, filters }: Prop
                                     Close
                                 </button>
 
+                                <button
+                                    type="button"
+                                    onClick={() => handleOpenFlagModal(activeCompareMatch)}
+                                    className="rounded-xl border border-rose-900/60 bg-rose-950/60 px-4 py-2 text-xs font-bold text-rose-300 hover:bg-rose-900/80 hover:text-white transition"
+                                >
+                                    🚩 Flag for Blacklist
+                                </button>
+
                                 {activeCompareMatch.status === 'pending_review' && (
                                     <>
                                         <button
@@ -967,6 +967,17 @@ export default function Index({ metrics, matches, suspenseItems, filters }: Prop
                     </form>
                 </div>
             )}
+
+            {/* Recommend Blacklist Modal */}
+            <RecommendBlacklistModal
+                show={flagModalOpen}
+                onClose={() => setFlagModalOpen(false)}
+                customerName={targetForFlag.customerName}
+                customerPhone={targetForFlag.customerPhone}
+                targetUserId={targetForFlag.targetUserId}
+                invoiceId={targetForFlag.invoiceId}
+                initialReason={targetForFlag.reason}
+            />
         </AuthenticatedLayout>
     );
 }

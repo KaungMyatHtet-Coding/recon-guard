@@ -25,11 +25,14 @@ class SupportAppealController extends Controller
             'message.min' => 'The appeal explanation must be at least 10 characters.',
         ]);
 
+        $phone = $request->input('contact_phone') ?: $request->user()?->phone;
+        $targetUser = $request->user() ?: (!empty($phone) ? User::where('phone', $phone)->first() : null);
+
         $appeal = SupportAppeal::create([
-            'user_id' => $request->user()->id,
+            'user_id' => $targetUser?->id,
             'subject' => $request->input('subject'),
             'message' => $request->input('message'),
-            'contact_phone' => $request->input('contact_phone') ?: $request->user()->phone,
+            'contact_phone' => $phone,
             'status' => 'pending',
         ]);
 

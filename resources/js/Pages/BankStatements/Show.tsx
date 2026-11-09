@@ -1,4 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import ConfirmModal from '@/Components/ConfirmModal';
+import RequestRollbackModal from './Partials/RequestRollbackModal';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import React, { useState } from 'react';
 
@@ -147,19 +149,20 @@ export default function Show({ batch, transactions }: Props) {
     const page = usePage();
     const isAdmin = (page.props as any).auth?.user?.roles?.includes('admin');
 
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [showRollbackModal, setShowRollbackModal] = useState(false);
+
     const handleDeleteBatch = () => {
-        if (confirm(`Are you sure you want to permanently purge batch "${batch.original_filename}"? All ${batch.total_records} transactions will be removed.`)) {
-            router.delete(route('bank-statements.destroy', batch.id));
-        }
+        setShowDeleteModal(true);
+    };
+
+    const confirmDeleteBatch = () => {
+        setShowDeleteModal(false);
+        router.delete(route('bank-statements.destroy', batch.id));
     };
 
     const handleRequestRollback = () => {
-        const reason = prompt(`Enter reason for requesting rollback of "${batch.original_filename}":`, 'Incorrect statement file / Duplicate batch uploaded');
-        if (reason && reason.trim()) {
-            router.post(route('bank-statements.request-rollback', batch.id), {
-                reason: reason.trim(),
-            });
-        }
+        setShowRollbackModal(true);
     };
 
     return (
@@ -422,6 +425,34 @@ export default function Show({ batch, transactions }: Props) {
                     </div>
                 </div>
             )}
+
+            {/* Permanent Purge ConfirmModal */}
+            <ConfirmModal
+                show={showDeleteModal}
+                title="Permanently Purge Statement Batch?"
+                variant="danger"
+                confirmText="Purge Batch"
+                cancelText="Cancel"
+                description={
+                    <div className="space-y-2">
+                        <p>
+                            Are you sure you want to permanently purge batch <strong className="text-slate-900 dark:text-white">"{batch.original_filename}"</strong>?
+                        </p>
+                        <p className="text-[11px] text-slate-500">
+                            All <strong className="font-mono text-slate-900 dark:text-white">{batch.total_records}</strong> transactions from this batch will be removed from the official ledger.
+                        </p>
+                    </div>
+                }
+                onClose={() => setShowDeleteModal(false)}
+                onConfirm={confirmDeleteBatch}
+            />
+
+            {/* Request Rollback Modal */}
+            <RequestRollbackModal
+                show={showRollbackModal}
+                batch={batch as any}
+                onClose={() => setShowRollbackModal(false)}
+            />
         </AuthenticatedLayout>
     );
 }

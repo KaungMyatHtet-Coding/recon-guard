@@ -1,17 +1,25 @@
+import Checkbox from '@/Components/Checkbox';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
+import PrivacyPolicyModal from '@/Components/PrivacyPolicyModal';
 import TextInput from '@/Components/TextInput';
+import { useLanguage } from '@/Contexts/LanguageContext';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { FormEventHandler } from 'react';
+import { FormEventHandler, useState } from 'react';
 
 export default function Register() {
+    const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+    const { language } = useLanguage();
+    const isMm = language === 'mm';
+
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
         email: '',
         password: '',
         password_confirmation: '',
+        privacy_policy_accepted: false as boolean,
     });
 
     const submit: FormEventHandler = (e) => {
@@ -103,19 +111,63 @@ export default function Register() {
                     />
                 </div>
 
-                <div className="mt-4 flex items-center justify-end">
+                {/* Mandatory Privacy Policy Consent */}
+                <div className="mt-4 flex items-start gap-2">
+                    <Checkbox
+                        id="privacy_policy_accepted"
+                        name="privacy_policy_accepted"
+                        checked={data.privacy_policy_accepted}
+                        onChange={(e) =>
+                            setData('privacy_policy_accepted', e.target.checked)
+                        }
+                        required
+                        className="mt-0.5"
+                    />
+                    <label
+                        htmlFor="privacy_policy_accepted"
+                        className="text-xs text-slate-600 dark:text-slate-400 leading-normal"
+                    >
+                        {isMm
+                            ? 'ကျွန်ုပ်သည် ReconGuard ၏ '
+                            : 'I have read and agree to the '}
+                        <button
+                            type="button"
+                            onClick={() => setShowPrivacyModal(true)}
+                            className="font-bold text-indigo-600 dark:text-indigo-400 underline hover:opacity-80"
+                        >
+                            {isMm
+                                ? 'လုံခြုံရေးနှင့် ကိုယ်ရေးအချက်အလက် မူဝါဒ'
+                                : 'Privacy Policy & Data Compliance'}
+                        </button>
+                        {isMm ? ' ကို ဖတ်ရှုသဘောတူပါသည်။' : ' of ReconGuard.'}
+                    </label>
+                </div>
+                <InputError
+                    message={errors.privacy_policy_accepted}
+                    className="mt-1"
+                />
+
+                <div className="mt-6 flex items-center justify-between">
                     <Link
                         href={route('login')}
-                        className="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                        className="rounded-md text-xs text-slate-600 dark:text-slate-400 underline hover:text-slate-900 dark:hover:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                     >
-                        Already registered?
+                        {isMm ? 'အကောင့်ရှိပြီးသားလား?' : 'Already registered?'}
                     </Link>
 
-                    <PrimaryButton className="ms-4" disabled={processing}>
-                        Register
+                    <PrimaryButton
+                        className="ms-4"
+                        disabled={processing || !data.privacy_policy_accepted}
+                    >
+                        {isMm ? 'အကောင့်ဖွင့်မည်' : 'Register'}
                     </PrimaryButton>
                 </div>
             </form>
+
+            <PrivacyPolicyModal
+                show={showPrivacyModal}
+                onClose={() => setShowPrivacyModal(false)}
+            />
         </GuestLayout>
     );
 }

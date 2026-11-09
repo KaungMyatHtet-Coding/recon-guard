@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ReconciliationMatch;
+use App\Services\AuditDateFilterService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -18,8 +19,7 @@ class AuditReportController extends Controller
     {
         $channel = $request->query('channel', 'all');
         $status = $request->query('status', 'all');
-        $startDate = $request->query('start_date');
-        $endDate = $request->query('end_date');
+        $search = $request->query('search', '');
 
         $query = ReconciliationMatch::with([
             'invoice.customer',
@@ -28,35 +28,68 @@ class AuditReportController extends Controller
             'auditor',
         ]);
 
-        if ($channel && in_array(strtolower($channel), ['kbzpay', 'wavepay', 'cbpay', 'ayapay'])) {
+        // 1. Channel Filter
+        if ($channel && $channel !== 'all' && in_array(strtolower($channel), ['kbzpay', 'wavepay', 'cbpay', 'ayapay', 'cash'])) {
             $ch = strtolower($channel);
             $query->where(function ($q) use ($ch) {
-                $q->whereHas('paymentSlip', fn ($s) => $s->where('payment_channel', $ch))
-                    ->orWhereHas('bankTransaction', fn ($b) => $b->where('payment_channel', $ch))
-                    ->orWhereHas('invoice', fn ($i) => $i->where('expected_channel', $ch));
+                $q->whereHas('paymentSlip', fn ($s) => $s->whereRaw('LOWER(payment_channel) = ?', [$ch]))
+                    ->orWhere(function ($q2) use ($ch) {
+                        $q2->whereNull('payment_slip_id')
+                            ->where(function ($q3) use ($ch) {
+                                $q3->whereHas('bankTransaction', fn ($b) => $b->whereRaw('LOWER(payment_channel) = ?', [$ch]))
+                                    ->orWhereHas('invoice', fn ($i) => $i->whereRaw('LOWER(expected_channel) = ?', [$ch]));
+                            });
+                    });
             });
         }
 
-        if ($status && in_array(strtolower($status), ['auto_approved', 'approved_by_accountant', 'pending_review', 'rejected_fraud'])) {
-            $query->where('status', strtolower($status));
+        // 2. Status / Classification Filter
+        if ($status && $status !== 'all') {
+            $st = strtolower($status);
+            if ($st === 'verified' || in_array($st, ['auto_approved', 'approved_by_accountant'])) {
+                $query->whereIn('status', ['auto_approved', 'approved_by_accountant']);
+            } elseif ($st === 'pending_review') {
+                $query->where('status', 'pending_review');
+            } elseif ($st === 'fraud' || $st === 'rejected_fraud') {
+                $query->where(function ($q) {
+                    $q->where('status', 'rejected_fraud')
+                        ->orWhereIn('match_type', ['amount_mismatch_fraud', 'fake_slip_fraud', 'duplicate_id_fraud']);
+                });
+            }
         }
 
-        if ($startDate) {
-            $query->whereDate('created_at', '>=', $startDate);
+        // 3. Unified Search Filter (Invoice #, Customer Name, Phone, Bank Txn Ref)
+        if (!empty($search)) {
+            $s = trim($search);
+            $query->where(function ($q) use ($s) {
+                $q->whereHas('invoice', function ($iq) use ($s) {
+                    $iq->where('invoice_number', 'like', "%{$s}%")
+                        ->orWhere('customer_name', 'like', "%{$s}%")
+                        ->orWhere('customer_phone', 'like', "%{$s}%");
+                })->orWhereHas('paymentSlip', function ($sq) use ($s) {
+                    $sq->where('extracted_transaction_id', 'like', "%{$s}%")
+                        ->orWhere('sender_phone', 'like', "%{$s}%")
+                        ->orWhere('sender_name', 'like', "%{$s}%");
+                })->orWhereHas('bankTransaction', function ($bq) use ($s) {
+                    $bq->where('bank_transaction_id', 'like', "%{$s}%")
+                        ->orWhere('sender_phone', 'like', "%{$s}%")
+                        ->orWhere('sender_name', 'like', "%{$s}%");
+                });
+            });
         }
 
-        if ($endDate) {
-            $query->whereDate('created_at', '<=', $endDate);
-        }
+        // 4. Default Date Scoping (This Month) & Interactive Calendar Range Filtering
+        $dateFilters = AuditDateFilterService::apply($query, $request, 'created_at');
 
-        $records = $query->latest('id')->limit(300)->get();
+        // Fetch up to 500 audit records for the report
+        $records = $query->latest('id')->limit(500)->get();
 
-        // Calculate Executive Audit Summary Figures
+        // 5. Calculate Executive Audit Summary Figures based on active filtered query
         $totalRecords = $records->count();
         $matchedVolume = (float) $records->whereIn('status', ['auto_approved', 'approved_by_accountant'])->sum('invoice_amount');
         $totalVarianceFees = (float) $records->where('match_type', 'fee_adjusted_match')->sum('variance_amount');
-        $fraudPrevented = (float) $records->where(function ($r) {
-            return $r->status === 'rejected_fraud' || str_contains($r->match_type, 'fraud');
+        $fraudPrevented = (float) $records->filter(function ($r) {
+            return $r->status === 'rejected_fraud' || str_contains((string) $r->match_type, 'fraud');
         })->sum('variance_amount');
 
         return Inertia::render('Admin/AuditReport', [
@@ -74,13 +107,19 @@ class AuditReportController extends Controller
                 'auditor_name' => $request->user()->name,
                 'auditor_email' => $request->user()->email,
                 'report_ref' => 'AUD-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -6)),
+                'audit_period' => $dateFilters['scope_summary'],
             ],
             'filters' => [
-                'channel' => $channel,
-                'status' => $status,
-                'start_date' => $startDate ?: '',
-                'end_date' => $endDate ?: '',
+                'channel'     => $channel,
+                'status'      => $status,
+                'search'      => $search,
+                'date_scope'  => $dateFilters['date_scope'],
+                'start_date'  => $dateFilters['start_date'],
+                'end_date'    => $dateFilters['end_date'],
+                'single_date' => $dateFilters['single_date'],
             ],
+            'scopeSummary' => $dateFilters['scope_summary'],
+            'isDefaultScope' => $dateFilters['is_default'],
         ]);
     }
 }

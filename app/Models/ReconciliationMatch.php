@@ -23,6 +23,7 @@ class ReconciliationMatch extends Model
         'variance_amount',
         'notes',
         'status',
+        'created_at',
     ];
 
     protected function casts(): array

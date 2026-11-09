@@ -1,8 +1,10 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import { PageProps } from '@/types';
 import CreateInvoiceModal from './Partials/CreateInvoiceModal';
+import AuditFilterToolbar, { FilterState, StatusOption } from '@/Components/AuditFilterToolbar';
+
 interface InvoiceListItem {
     id: number;
     invoice_number: string;
@@ -41,6 +43,9 @@ interface InvoicesIndexProps {
         email: string;
     }>;
     canCreateInvoice: boolean;
+    filters?: FilterState;
+    scopeSummary?: string;
+    isDefaultScope?: boolean;
 }
 
 export default function InvoicesIndex({
@@ -49,6 +54,9 @@ export default function InvoicesIndex({
     currentTab,
     customers,
     canCreateInvoice,
+    filters = {},
+    scopeSummary,
+    isDefaultScope = true,
 }: InvoicesIndexProps) {
     const { auth } = usePage<PageProps>().props;
     const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
@@ -61,6 +69,39 @@ export default function InvoicesIndex({
             setTimeout(() => setCopiedInvoiceId(null), 2000);
         });
     };
+
+    const handleFilterChange = (newFilters: Partial<FilterState>) => {
+        const merged = {
+            ...filters,
+            ...newFilters,
+        };
+        const query: Record<string, any> = {};
+        Object.entries(merged).forEach(([k, v]) => {
+            if (v !== null && v !== undefined && v !== '') {
+                query[k] = v;
+            }
+        });
+        router.get(route('invoices.index'), query, {
+            preserveState: true,
+            preserveScroll: true,
+        });
+    };
+
+    const statusOptions: StatusOption[] = [
+        { value: 'all', label: `All Invoices (${stats.total})` },
+        { value: 'unpaid', label: `Unpaid (${stats.unpaid})` },
+        { value: 'pending', label: `Pending Verification (${stats.pending})` },
+        { value: 'reconciled', label: `Reconciled (${stats.reconciled})` },
+        { value: 'flagged', label: `Fraud / Discrepancy (${stats.flagged})` },
+    ];
+
+    const channelOptions = [
+        { value: 'all', label: 'All Channels' },
+        { value: 'kbzpay', label: 'KBZPay' },
+        { value: 'wavepay', label: 'WavePay' },
+        { value: 'cbpay', label: 'CB Pay' },
+        { value: 'ayapay', label: 'AYA Pay' },
+    ];
 
 
     const formatMMK = (amount: number) => {
@@ -125,14 +166,6 @@ export default function InvoicesIndex({
         }
     };
 
-    const tabs = [
-        { id: 'all', label: 'All Invoices', count: stats.total },
-        { id: 'unpaid', label: 'Unpaid', count: stats.unpaid },
-        { id: 'pending', label: 'Pending Verification', count: stats.pending },
-        { id: 'reconciled', label: 'Reconciled', count: stats.reconciled },
-        { id: 'flagged', label: 'Fraud / Discrepancy', count: stats.flagged },
-    ];
-
     return (
         <AuthenticatedLayout
             header={
@@ -164,28 +197,20 @@ export default function InvoicesIndex({
             <Head title="Invoices & Payment Slips - ReconGuard" />
 
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-6">
-                {/* Filter Tabs */}
-                <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
-                    {tabs.map((tab) => {
-                        const active = currentTab === tab.id;
-                        return (
-                            <Link
-                                key={tab.id}
-                                href={route('invoices.index', { tab: tab.id })}
-                                className={`px-3.5 py-1.5 rounded-xl text-xs font-medium transition flex items-center gap-2 ${
-                                    active
-                                        ? 'bg-[#705CF6] text-white font-semibold shadow-sm'
-                                        : 'bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800'
-                                }`}
-                            >
-                                <span>{tab.label}</span>
-                                <span className={`px-1.5 py-0.2 rounded-md text-[10px] font-bold ${active ? 'bg-purple-900/60 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'}`}>
-                                    {tab.count}
-                                </span>
-                            </Link>
-                        );
-                    })}
-                </div>
+                {/* Audit Scope & Filter Toolbar */}
+                <AuditFilterToolbar
+                    filters={{
+                        ...filters,
+                        status: filters.status || currentTab,
+                    }}
+                    onFilterChange={handleFilterChange}
+                    statusOptions={statusOptions}
+                    channelOptions={channelOptions}
+                    searchPlaceholder="Search Customer Name, Phone, Invoice #, or Slip TxID..."
+                    totalRecords={invoices.total}
+                    scopeSummary={scopeSummary}
+                    isDefaultScope={isDefaultScope}
+                />
 
                 {/* Invoices List Table */}
                 <div className="overflow-hidden rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-[#161B26] shadow-sm">

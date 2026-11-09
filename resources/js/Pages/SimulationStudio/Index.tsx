@@ -59,6 +59,7 @@ export default function SimulationStudio({
     const [tamperedAmount, setTamperedAmount] = useState<string>('500000');
     const [duplicateTxnId, setDuplicateTxnId] = useState<string>('010020261028984210');
     const [previewLoading, setPreviewLoading] = useState<boolean>(false);
+    const [previewError, setPreviewError] = useState<string | null>(null);
     const [previewData, setPreviewData] = useState<{
         preview_url: string;
         txn_id: string;
@@ -83,6 +84,7 @@ export default function SimulationStudio({
     const handleGeneratePreview = async () => {
         if (!selectedInvoiceId) return;
         setPreviewLoading(true);
+        setPreviewError(null);
         try {
             const resp = await axios.post(route('simulation-studio.preview-slip'), {
                 invoice_id: selectedInvoiceId,
@@ -93,9 +95,10 @@ export default function SimulationStudio({
             });
             if (resp.data.success) {
                 setPreviewData(resp.data);
+                setPreviewError(null);
             }
         } catch (err: any) {
-            alert('Failed to generate preview: ' + (err.response?.data?.message || err.message));
+            setPreviewError(err.response?.data?.message || err.message || 'Failed to generate preview image');
         } finally {
             setPreviewLoading(false);
         }
@@ -443,6 +446,12 @@ export default function SimulationStudio({
                                     1-Click Inject Slip & Bank Row
                                 </button>
                             </div>
+
+                            {previewError && (
+                                <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 text-xs text-rose-600 dark:text-rose-400 font-medium">
+                                    ⚠️ {previewError}
+                                </div>
+                            )}
                         </div>
 
                         {/* Live Receipt Screenshot Preview Pane */}

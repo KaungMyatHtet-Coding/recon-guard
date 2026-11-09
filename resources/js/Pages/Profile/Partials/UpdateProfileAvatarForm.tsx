@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react';
 import { usePage, router } from '@inertiajs/react';
 import { PageProps } from '@/types';
 import UserAvatar from '@/Components/UserAvatar';
+import ConfirmModal from '@/Components/ConfirmModal';
 
 export default function UpdateProfileAvatarForm({ className = '' }: { className?: string }) {
     const { auth } = usePage<PageProps>().props;
@@ -13,6 +14,7 @@ export default function UpdateProfileAvatarForm({ className = '' }: { className?
     const [processing, setProcessing] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
+    const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
 
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -62,8 +64,11 @@ export default function UpdateProfileAvatarForm({ className = '' }: { className?
     };
 
     const handleRemoveAvatar = () => {
-        if (!confirm('Are you sure you want to remove your profile photo?')) return;
+        setShowRemoveConfirm(true);
+    };
 
+    const confirmRemoveAvatar = () => {
+        setShowRemoveConfirm(false);
         setProcessing(true);
         router.delete(route('profile.avatar.destroy'), {
             preserveScroll: true,
@@ -172,6 +177,23 @@ export default function UpdateProfileAvatarForm({ className = '' }: { className?
                     </p>
                 </div>
             </div>
+
+            {/* Remove Avatar ConfirmModal */}
+            <ConfirmModal
+                show={showRemoveConfirm}
+                title="Remove Profile Photo?"
+                variant="danger"
+                confirmText="Remove Photo"
+                cancelText="Cancel"
+                description={
+                    <p>
+                        Are you sure you want to remove your profile photo? Your account will revert to the default initial avatar.
+                    </p>
+                }
+                loading={processing}
+                onClose={() => setShowRemoveConfirm(false)}
+                onConfirm={confirmRemoveAvatar}
+            />
         </section>
     );
 }

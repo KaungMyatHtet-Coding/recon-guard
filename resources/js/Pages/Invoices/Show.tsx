@@ -1,8 +1,10 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import ConfirmModal from '@/Components/ConfirmModal';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { ChangeEvent, FormEvent, useState } from 'react';
 import axios from 'axios';
 import { PageProps } from '@/types';
+import RecommendBlacklistModal from '@/Components/RecommendBlacklistModal';
 
 interface InvoiceData {
     id: number;
@@ -56,6 +58,7 @@ export default function InvoiceShow({
     const { auth } = usePage<PageProps>().props;
     const isStaff = auth?.user?.roles?.some((r: string) => ['admin', 'accountant'].includes(r));
     const [isSettlingCash, setIsSettlingCash] = useState(false);
+    const [flagModalOpen, setFlagModalOpen] = useState(false);
 
     // Active Channel for QR display and manual upload
     const [activeChannel, setActiveChannel] = useState<'kbzpay' | 'wavepay' | 'cbpay' | 'ayapay'>(
@@ -78,14 +81,21 @@ export default function InvoiceShow({
         });
     };
 
+    const [showCashConfirm, setShowCashConfirm] = useState(false);
+    const [uploadError, setUploadError] = useState<string | null>(null);
+
     const handleSettleCash = () => {
-        if (!confirm(`Confirm recording direct counter cash settlement of ${formatMMK(invoice.amount)} for invoice #${invoice.invoice_number}? This will immediately mark the invoice as reconciled.`)) {
-            return;
-        }
+        setShowCashConfirm(true);
+    };
+
+    const confirmSettleCash = () => {
         setIsSettlingCash(true);
         router.post(route('invoices.settleCash', invoice.id), {}, {
             preserveScroll: true,
-            onFinish: () => setIsSettlingCash(false),
+            onFinish: () => {
+                setIsSettlingCash(false);
+                setShowCashConfirm(false);
+            },
         });
     };
 
@@ -176,9 +186,10 @@ export default function InvoiceShow({
     const handleSubmitSlip = (e: FormEvent) => {
         e.preventDefault();
         if (!selectedFile) {
-            alert('Please select a payment slip image first.');
+            setUploadError('Please select a payment slip image first.');
             return;
         }
+        setUploadError(null);
 
         postSubmit(route('invoices.submitSlip', invoice.id), {
             forceFormData: true,
@@ -188,6 +199,7 @@ export default function InvoiceShow({
                 setImagePreviewUrl(null);
                 setOcrScanResult(null);
                 setShowOverrideUploader(false);
+                setUploadError(null);
             },
         });
     };
@@ -258,6 +270,16 @@ export default function InvoiceShow({
                                 >
                                     {paymentLinkCopied ? '✓ Copied!' : '📋 Copy Payment Link'}
                                 </button>
+                                {isStaff && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setFlagModalOpen(true)}
+                                        className="inline-flex items-center px-2.5 py-1 rounded-xl text-xs font-semibold bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 transition shadow-xs"
+                                        title="Flag this customer or submission for Chief Auditor Blacklist review"
+                                    >
+                                        <span>🚩 Flag for Blacklist</span>
+                                    </button>
+                                )}
                             </div>
                             <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
                                 Client: <span className="text-slate-900 dark:text-white font-semibold">{invoice.customer_name}</span>
@@ -583,6 +605,11 @@ export default function InvoiceShow({
                                 )}
 
                                 <form onSubmit={handleSubmitSlip} className="space-y-4">
+                                    {uploadError && (
+                                        <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 text-xs text-rose-600 dark:text-rose-400 font-medium">
+                                            ⚠️ {uploadError}
+                                        </div>
+                                    )}
                                     {/* File Picker */}
                                     <div className="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-[#705CF6] rounded-2xl p-6 text-center bg-slate-50/60 dark:bg-slate-900/50 transition cursor-pointer relative">
                                         <input
@@ -682,6 +709,42 @@ export default function InvoiceShow({
                     </div>
                 </div>
             )}
+            {/* Recommend Blacklist Modal */}
+            <RecommendBlacklistModal
+                show={flagModalOpen}
+                onClose={() => setFlagModalOpen(false)}
+                customerName={invoice.customer_name}
+                customerPhone={latestSlip?.sender_phone || invoice.customer_phone || ''}
+                targetUserId={(invoice as any).user_id || null}
+                invoiceId={invoice.id}
+                initialReason={
+                    latestSlip
+                        ? `Flagged from Invoice #${invoice.invoice_number} (Slip #${latestSlip.transaction_id || latestSlip.id}). Detected fraud or unverified submission.`
+                        : `Flagged from Invoice #${invoice.invoice_number}.`
+                }
+            />
+
+            {/* Direct Counter Cash Settlement ConfirmModal */}
+            <ConfirmModal
+                show={showCashConfirm}
+                title="Confirm Direct Counter Cash Settlement?"
+                variant="success"
+                confirmText="Confirm Cash Payment"
+                cancelText="Cancel"
+                description={
+                    <div className="space-y-2">
+                        <p>
+                            Confirm recording direct counter cash settlement of <strong className="font-mono text-emerald-600 dark:text-emerald-400">{formatMMK(invoice.amount)}</strong> for invoice <strong className="text-slate-900 dark:text-white">#{invoice.invoice_number}</strong>?
+                        </p>
+                        <p className="text-[11px] text-slate-500">
+                            This will immediately record the counter cash payment and mark the invoice as fully reconciled.
+                        </p>
+                    </div>
+                }
+                loading={isSettlingCash}
+                onClose={() => setShowCashConfirm(false)}
+                onConfirm={confirmSettleCash}
+            />
         </AuthenticatedLayout>
     );
 }

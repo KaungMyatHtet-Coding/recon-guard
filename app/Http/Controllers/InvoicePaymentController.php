@@ -6,6 +6,7 @@ use App\Models\AccountNotification;
 use App\Models\Invoice;
 use App\Models\PaymentSlip;
 use App\Models\User;
+use App\Services\AuditDateFilterService;
 use App\Services\SlipOcrAndForensicsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -43,8 +44,8 @@ class InvoicePaymentController extends Controller
             });
         }
 
-        // Filter tab
-        $tab = $request->query('tab', 'all');
+        // Filter tab / status
+        $tab = $request->query('status', $request->query('tab', 'all'));
         if ($tab === 'unpaid') {
             $query->where('status', 'unpaid');
         } elseif ($tab === 'pending') {
@@ -55,7 +56,32 @@ class InvoicePaymentController extends Controller
             $query->whereIn('status', ['fraud_flagged', 'discrepancy']);
         }
 
-        $invoices = $query->latest('id')->paginate(15)->withQueryString();
+        // Filter by channel
+        $channel = $request->query('channel', 'all');
+        if ($channel && $channel !== 'all' && in_array(strtolower($channel), ['kbzpay', 'wavepay', 'cbpay', 'ayapay'])) {
+            $query->where('expected_channel', strtolower($channel));
+        }
+
+        // Unified Search Filter
+        $search = $request->query('search', '');
+        if (!empty($search)) {
+            $s = trim($search);
+            $query->where(function ($q) use ($s) {
+                $q->where('invoice_number', 'like', "%{$s}%")
+                    ->orWhere('customer_name', 'like', "%{$s}%")
+                    ->orWhere('customer_phone', 'like', "%{$s}%")
+                    ->orWhereHas('paymentSlips', function ($sq) use ($s) {
+                        $sq->where('extracted_transaction_id', 'like', "%{$s}%")
+                            ->orWhere('sender_phone', 'like', "%{$s}%")
+                            ->orWhere('sender_name', 'like', "%{$s}%");
+                    });
+            });
+        }
+
+        // Date Scoping & Interactive Calendar Filtering
+        $dateFilters = AuditDateFilterService::apply($query, $request, 'created_at');
+
+        $invoices = $query->latest('id')->paginate(20)->withQueryString();
 
         // Summary counts
         $countsQuery = Invoice::query();
@@ -87,6 +113,18 @@ class InvoicePaymentController extends Controller
             'currentTab' => $tab,
             'customers' => $customers,
             'canCreateInvoice' => ! $isCustomer,
+            'filters' => [
+                'tab'         => $tab,
+                'status'      => $tab,
+                'channel'     => $channel,
+                'search'      => $search,
+                'date_scope'  => $dateFilters['date_scope'],
+                'start_date'  => $dateFilters['start_date'],
+                'end_date'    => $dateFilters['end_date'],
+                'single_date' => $dateFilters['single_date'],
+            ],
+            'scopeSummary' => $dateFilters['scope_summary'],
+            'isDefaultScope' => $dateFilters['is_default'],
         ]);
     }
 

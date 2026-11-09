@@ -2,7 +2,8 @@ import LanguageSwitcher from '@/Components/LanguageSwitcher';
 import ThemeToggle from '@/Components/ThemeToggle';
 import { useLanguage } from '@/Contexts/LanguageContext';
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import React, { useState } from 'react';
+import React from 'react';
+import AuditFilterToolbar, { FilterState, StatusOption } from '@/Components/AuditFilterToolbar';
 
 interface MatchItem {
     id: number;
@@ -49,43 +50,63 @@ interface SummaryData {
     auditor_name: string;
     auditor_email: string;
     report_ref: string;
+    audit_period?: string;
 }
 
 interface Props {
     records: MatchItem[];
     can_export_pdf?: boolean;
     summary: SummaryData;
-    filters: {
-        channel: string;
-        status: string;
-        start_date: string;
-        end_date: string;
-    };
+    filters: FilterState;
+    scopeSummary?: string;
+    isDefaultScope?: boolean;
 }
 
-export default function AuditReport({ records, can_export_pdf, summary, filters }: Props) {
+export default function AuditReport({
+    records,
+    can_export_pdf,
+    summary,
+    filters = {},
+    scopeSummary,
+    isDefaultScope = true,
+}: Props) {
     const { auth } = usePage().props as any;
     const isAdmin = Boolean(can_export_pdf ?? auth?.user?.roles?.includes('admin'));
     const backUrl = isAdmin ? route('admin.dashboard') : route('reconciliation.index');
     const backLabel = isAdmin ? '← Back to Governance Suite' : '← Back to 3-Way Reconciliation';
 
-    const [selectedChannel, setSelectedChannel] = useState(filters.channel || 'all');
-    const [selectedStatus, setSelectedStatus] = useState(filters.status || 'all');
-    const [startDate, setStartDate] = useState(filters.start_date || '');
-    const [endDate, setEndDate] = useState(filters.end_date || '');
-
-    const handleFilter = () => {
-        const query: Record<string, string> = {};
-        if (selectedChannel && selectedChannel !== 'all') query.channel = selectedChannel;
-        if (selectedStatus && selectedStatus !== 'all') query.status = selectedStatus;
-        if (startDate) query.start_date = startDate;
-        if (endDate) query.end_date = endDate;
-
+    const handleFilterChange = (newFilters: Partial<FilterState>) => {
+        const merged = {
+            ...filters,
+            ...newFilters,
+        };
+        const query: Record<string, any> = {};
+        Object.entries(merged).forEach(([k, v]) => {
+            if (v !== null && v !== undefined && v !== '') {
+                query[k] = v;
+            }
+        });
         router.get(route('admin.audit-report'), query, {
             preserveState: true,
             preserveScroll: true,
         });
     };
+
+    const statusOptions: StatusOption[] = [
+        { value: 'all', label: 'All Statuses' },
+        { value: 'verified', label: 'Verified / Settled' },
+        { value: 'pending_review', label: 'Pending Review (Fuzzy)' },
+        { value: 'fraud', label: 'Rejected Fraud / Discrepancy' },
+    ];
+
+    const channelOptions = [
+        { value: 'all', label: 'All Channels' },
+        { value: 'kbzpay', label: 'KBZPay' },
+        { value: 'wavepay', label: 'WavePay' },
+        { value: 'cbpay', label: 'CB Pay' },
+        { value: 'ayapay', label: 'AYA Pay' },
+        { value: 'cash', label: 'CASH' },
+    ];
 
     const handlePrint = () => {
         window.print();
@@ -103,8 +124,8 @@ export default function AuditReport({ records, can_export_pdf, summary, filters 
         <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0B0F19] text-[#0F172A] dark:text-[#F8FAFC] p-4 sm:p-8 print:bg-white print:text-black print:p-0 transition-colors duration-200 font-sans">
             <Head title={`Official Audit Report - ${summary.report_ref}`} />
 
-            {/* Print Control Toolbar (Hidden in Print) */}
-            <div className="mx-auto max-w-6xl mb-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#1E293B] p-4 backdrop-blur shadow-xl print:hidden space-y-3">
+            {/* Print Control Toolbar & Modern Unified Filter (Hidden in Print) */}
+            <div className="mx-auto max-w-6xl mb-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#1E293B] p-5 backdrop-blur shadow-xl print:hidden space-y-4">
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
                         <Link
@@ -126,7 +147,7 @@ export default function AuditReport({ records, can_export_pdf, summary, filters 
                             <button
                                 type="button"
                                 onClick={handlePrint}
-                                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-5 py-2 text-xs font-bold text-white shadow-lg shadow-purple-600/30 hover:from-purple-500 hover:to-indigo-500 transition"
+                                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-5 py-2 text-xs font-bold text-white shadow-lg shadow-purple-600/30 hover:from-purple-500 hover:to-indigo-500 transition cursor-pointer"
                             >
                                 <span>🖨️</span> {t('action.export_pdf', 'Print / Save as PDF')}
                             </button>
@@ -138,54 +159,18 @@ export default function AuditReport({ records, can_export_pdf, summary, filters 
                     </div>
                 </div>
 
-                {/* Filter Controls */}
-                <div className="flex flex-wrap items-center gap-3 border-t border-slate-200 dark:border-slate-800 pt-3 text-xs">
-                    <span className="text-slate-700 dark:text-slate-300 font-semibold">Filter Report:</span>
-                    <select
-                        value={selectedChannel}
-                        onChange={(e) => setSelectedChannel(e.target.value)}
-                        className="rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2.5 py-1 text-xs text-slate-900 dark:text-slate-200"
-                    >
-                        <option value="all">All Channels</option>
-                        <option value="kbzpay">KBZPay</option>
-                        <option value="wavepay">WavePay</option>
-                        <option value="cbpay">CB Pay</option>
-                        <option value="ayapay">AYA Pay</option>
-                    </select>
-
-                    <select
-                        value={selectedStatus}
-                        onChange={(e) => setSelectedStatus(e.target.value)}
-                        className="rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2.5 py-1 text-xs text-slate-900 dark:text-slate-200"
-                    >
-                        <option value="all">All Statuses</option>
-                        <option value="auto_approved">Auto-Approved</option>
-                        <option value="approved_by_accountant">Accountant Approved</option>
-                        <option value="pending_review">Pending Review</option>
-                        <option value="rejected_fraud">Rejected Fraud</option>
-                    </select>
-
-                    <input
-                        type="date"
-                        value={startDate}
-                        onChange={(e) => setStartDate(e.target.value)}
-                        className="rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2.5 py-1 text-xs text-slate-900 dark:text-slate-200"
+                {/* Unified Interactive Filter Toolbar */}
+                <div className="border-t border-slate-200 dark:border-slate-800 pt-3.5">
+                    <AuditFilterToolbar
+                        filters={filters}
+                        onFilterChange={handleFilterChange}
+                        statusOptions={statusOptions}
+                        channelOptions={channelOptions}
+                        searchPlaceholder="Search by Invoice #, Customer Name, Phone, or Bank Txn Ref..."
+                        totalRecords={summary.total_records}
+                        scopeSummary={scopeSummary || summary.audit_period}
+                        isDefaultScope={isDefaultScope}
                     />
-
-                    <input
-                        type="date"
-                        value={endDate}
-                        onChange={(e) => setEndDate(e.target.value)}
-                        className="rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2.5 py-1 text-xs text-slate-900 dark:text-slate-200"
-                    />
-
-                    <button
-                        type="button"
-                        onClick={handleFilter}
-                        className="rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 px-3 py-1 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition"
-                    >
-                        Apply Filters
-                    </button>
                 </div>
             </div>
 
@@ -220,6 +205,9 @@ export default function AuditReport({ records, can_export_pdf, summary, filters 
                             {summary.report_ref}
                         </div>
                         <div className="text-slate-600 dark:text-slate-400 print:text-gray-600">
+                            Audit Period: <strong className="text-slate-900 dark:text-slate-200 print:text-black">{summary.audit_period || scopeSummary || 'This Month'}</strong>
+                        </div>
+                        <div className="text-slate-600 dark:text-slate-400 print:text-gray-600">
                             Generated: <strong className="text-slate-900 dark:text-slate-200 print:text-black">{summary.generation_timestamp}</strong>
                         </div>
                         <div className="text-slate-600 dark:text-slate-400 print:text-gray-600">
@@ -239,7 +227,7 @@ export default function AuditReport({ records, can_export_pdf, summary, filters 
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 border border-slate-200 dark:border-slate-800 print:border-gray-300 rounded-2xl p-4 bg-slate-50 dark:bg-slate-900/60 print:bg-gray-50">
                         <div>
                             <div className="text-[11px] text-slate-600 dark:text-slate-400 print:text-gray-600 uppercase font-semibold">Total Audited Transactions</div>
-                            <div className="text-xl font-black text-slate-900 dark:text-white print:text-black mt-1">{summary.total_records}</div>
+                            <div className="text-xl font-black text-slate-900 dark:text-white print:text-black mt-1 font-mono">{summary.total_records}</div>
                         </div>
                         <div>
                             <div className="text-[11px] text-slate-600 dark:text-slate-400 print:text-gray-600 uppercase font-semibold">Verified Settled Volume</div>

@@ -1,7 +1,9 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import ConfirmModal from '@/Components/ConfirmModal';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import React, { useRef, useState } from 'react';
 import RequestRollbackModal from './Partials/RequestRollbackModal';
+import AuditFilterToolbar, { FilterState, StatusOption } from '@/Components/AuditFilterToolbar';
 
 interface BatchItem {
     id: number;
@@ -67,26 +69,55 @@ interface Props {
     };
     batches: PaginatedData<BatchItem>;
     transactions: PaginatedData<BankTxItem>;
-    filters: {
-        channel: string;
-        status: string;
-        search: string;
-    };
+    filters: FilterState;
+    scopeSummary?: string;
+    isDefaultScope?: boolean;
 }
 
-export default function Index({ metrics, batches, transactions, filters }: Props) {
+export default function Index({ metrics, batches, transactions, filters = {}, scopeSummary, isDefaultScope = true }: Props) {
     const page = usePage();
     const flash = (page.props as any).flash || {};
     const isAdmin = (page.props as any).auth?.user?.roles?.includes('admin');
 
-    const [selectedChannel, setSelectedChannel] = useState<string>(filters.channel || 'all');
-    const [selectedStatus, setSelectedStatus] = useState<string>(filters.status || 'all');
-    const [searchTerm, setSearchTerm] = useState<string>(filters.search || '');
     const [dragActive, setDragActive] = useState(false);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [uploadChannel, setUploadChannel] = useState<string>('auto');
     const [inspectPayloadTx, setInspectPayloadTx] = useState<BankTxItem | null>(null);
     const [rollbackModalBatch, setRollbackModalBatch] = useState<BatchItem | null>(null);
+
+    const handleFilterChange = (newFilters: Partial<FilterState>) => {
+        const merged = {
+            ...filters,
+            ...newFilters,
+        };
+        const query: Record<string, any> = {};
+        Object.entries(merged).forEach(([k, v]) => {
+            if (v !== null && v !== undefined && v !== '') {
+                query[k] = v;
+            }
+        });
+        router.get(route('bank-statements.index'), query, {
+            preserveState: true,
+            preserveScroll: true,
+        });
+    };
+
+    const statusOptions: StatusOption[] = [
+        { value: 'all', label: 'All Statuses' },
+        { value: 'unmatched', label: 'Unmatched' },
+        { value: 'matched', label: 'Matched (100%)' },
+        { value: 'fuzzy_matched', label: 'Fuzzy Matched' },
+        { value: 'suspense', label: 'Suspense / Direct' },
+        { value: 'disputed', label: 'Disputed' },
+    ];
+
+    const channelOptions = [
+        { value: 'all', label: 'All Channels' },
+        { value: 'kbzpay', label: 'KBZPay' },
+        { value: 'wavepay', label: 'WavePay' },
+        { value: 'cbpay', label: 'CB Pay' },
+        { value: 'ayapay', label: 'AYA Pay' },
+    ];
 
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -132,28 +163,18 @@ export default function Index({ metrics, batches, transactions, filters }: Props
         });
     };
 
-    const handleFilterSubmit = (channelVal?: string, statusVal?: string, searchVal?: string) => {
-        const query: Record<string, string> = {};
-        const ch = channelVal !== undefined ? channelVal : selectedChannel;
-        const st = statusVal !== undefined ? statusVal : selectedStatus;
-        const q = searchVal !== undefined ? searchVal : searchTerm;
-
-        if (ch && ch !== 'all') query.channel = ch;
-        if (st && st !== 'all') query.status = st;
-        if (q && q.trim()) query.search = q.trim();
-
-        router.get(route('bank-statements.index'), query, {
-            preserveState: true,
-            preserveScroll: true,
-        });
-    };
+    const [batchToDelete, setBatchToDelete] = useState<BatchItem | null>(null);
 
     const handleDeleteBatch = (batch: BatchItem) => {
-        if (confirm(`Are you sure you want to permanently purge batch "${batch.original_filename}"? This will delete all its ${batch.total_records} transactions.`)) {
-            router.delete(route('bank-statements.destroy', batch.id), {
-                preserveScroll: true,
-            });
-        }
+        setBatchToDelete(batch);
+    };
+
+    const confirmDeleteBatch = () => {
+        if (!batchToDelete) return;
+        router.delete(route('bank-statements.destroy', batchToDelete.id), {
+            preserveScroll: true,
+            onFinish: () => setBatchToDelete(null),
+        });
     };
 
     const handleRequestRollback = (batch: BatchItem) => {
@@ -593,89 +614,21 @@ export default function Index({ metrics, batches, transactions, filters }: Props
                         </div>
                     </div>
 
-                    {/* Filter & Search Bar */}
-                    <div className="flex flex-col md:flex-row gap-3 items-center justify-between">
-                        {/* Channel Filter Tabs */}
-                        <div className="flex flex-wrap items-center gap-1 w-full md:w-auto">
-                            {[
-                                { id: 'all', label: 'All Channels' },
-                                { id: 'kbzpay', label: 'KBZPay' },
-                                { id: 'wavepay', label: 'WavePay' },
-                                { id: 'cbpay', label: 'CB Pay' },
-                                { id: 'ayapay', label: 'AYA Pay' },
-                            ].map((tab) => (
-                                <button
-                                    key={tab.id}
-                                    type="button"
-                                    onClick={() => {
-                                        setSelectedChannel(tab.id);
-                                        handleFilterSubmit(tab.id, selectedStatus, searchTerm);
-                                    }}
-                                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${
-                                        selectedChannel === tab.id
-                                            ? 'bg-[#705CF6] text-white shadow-sm'
-                                            : 'bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200 border border-slate-200 dark:border-slate-800'
-                                    }`}
-                                >
-                                    {tab.label}
-                                </button>
-                            ))}
-                        </div>
-
-                        {/* Search & Status Filters */}
-                        <div className="flex items-center gap-2 w-full md:w-auto">
-                            <select
-                                value={selectedStatus}
-                                onChange={(e) => {
-                                    setSelectedStatus(e.target.value);
-                                    handleFilterSubmit(selectedChannel, e.target.value, searchTerm);
-                                }}
-                                className="rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-1.5 text-xs text-slate-900 dark:text-slate-200 focus:border-[#705CF6] focus:ring-1 focus:ring-[#705CF6]"
-                            >
-                                <option value="all">All Statuses</option>
-                                <option value="unmatched">Unmatched</option>
-                                <option value="matched">Matched (100%)</option>
-                                <option value="fuzzy_matched">Fuzzy Matched</option>
-                                <option value="suspense">Suspense / Direct</option>
-                                <option value="disputed">Disputed</option>
-                            </select>
-
-                            <div className="relative flex-1 md:w-64">
-                                <input
-                                    type="text"
-                                    placeholder="Search Txn ID, Phone, Name..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'Enter') {
-                                            handleFilterSubmit(selectedChannel, selectedStatus, searchTerm);
-                                        }
-                                    }}
-                                    className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-1.5 text-xs text-slate-900 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:border-[#705CF6] focus:ring-1 focus:ring-[#705CF6]"
-                                />
-                                {searchTerm && (
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setSearchTerm('');
-                                            handleFilterSubmit(selectedChannel, selectedStatus, '');
-                                        }}
-                                        className="absolute right-2.5 top-2 text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-                                    >
-                                        ✕
-                                    </button>
-                                )}
-                            </div>
-
-                            <button
-                                type="button"
-                                onClick={() => handleFilterSubmit(selectedChannel, selectedStatus, searchTerm)}
-                                className="rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition"
-                            >
-                                Filter
-                            </button>
-                        </div>
-                    </div>
+                    {/* Audit Scope & Filter Toolbar */}
+                    <AuditFilterToolbar
+                        filters={{
+                            ...filters,
+                            status: filters.status || 'all',
+                            channel: filters.channel || 'all',
+                        }}
+                        onFilterChange={handleFilterChange}
+                        statusOptions={statusOptions}
+                        channelOptions={channelOptions}
+                        searchPlaceholder="Search Bank TxID, Phone, Sender Name, or Note..."
+                        totalRecords={transactions.total}
+                        scopeSummary={scopeSummary}
+                        isDefaultScope={isDefaultScope}
+                    />
 
                     {/* Ledger Table */}
                     <div className="overflow-x-auto">
@@ -848,6 +801,29 @@ export default function Index({ metrics, batches, transactions, filters }: Props
                 show={Boolean(rollbackModalBatch)}
                 batch={rollbackModalBatch}
                 onClose={() => setRollbackModalBatch(null)}
+            />
+
+            {/* Permanent Purge ConfirmModal */}
+            <ConfirmModal
+                show={Boolean(batchToDelete)}
+                title="Permanently Purge Statement Batch?"
+                variant="danger"
+                confirmText="Purge Batch"
+                cancelText="Cancel"
+                description={
+                    batchToDelete ? (
+                        <div className="space-y-2">
+                            <p>
+                                Are you sure you want to permanently purge batch <strong className="text-slate-900 dark:text-white">"{batchToDelete.original_filename}"</strong>?
+                            </p>
+                            <p className="text-[11px] text-slate-500">
+                                This will permanently remove all <strong className="font-mono text-slate-900 dark:text-white">{batchToDelete.total_records}</strong> transactions from the official ledger.
+                            </p>
+                        </div>
+                    ) : null
+                }
+                onClose={() => setBatchToDelete(null)}
+                onConfirm={confirmDeleteBatch}
             />
         </AuthenticatedLayout>
     );

@@ -1,16 +1,22 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import ConfirmModal from '@/Components/ConfirmModal';
+import InspectCaseModal, { RecommendationCaseItem } from './Partials/InspectCaseModal';
 import { Head, Link, router } from '@inertiajs/react';
 import React, { useState } from 'react';
 
 interface BlacklistedUser {
     id: number;
+    user_id?: number | null;
     name: string;
     email: string;
     phone: string | null;
+    type?: 'Registered' | 'Walk-in Guest';
     is_blacklisted: boolean;
     blacklist_reason: string | null;
+    created_at?: string;
     updated_at: string;
     payment_slips_count: number;
+    blacklisted_by_name?: string;
 }
 
 interface FraudMatch {
@@ -58,7 +64,7 @@ interface CustomerOption {
 
 interface SupportAppealItem {
     id: number;
-    user_id: number;
+    user_id: number | null;
     subject: string;
     message: string;
     contact_phone: string | null;
@@ -73,11 +79,14 @@ interface SupportAppealItem {
     };
 }
 
+interface BlacklistRecommendationItem extends RecommendationCaseItem {}
+
 interface Props {
     blacklistedUsers: BlacklistedUser[];
     recentFraudMatches: FraudMatch[];
     customers: CustomerOption[];
     appeals?: SupportAppealItem[];
+    recommendations?: BlacklistRecommendationItem[];
 }
 
 export default function Blacklist({
@@ -85,50 +94,153 @@ export default function Blacklist({
     recentFraudMatches,
     customers,
     appeals = [],
+    recommendations = [],
 }: Props) {
-    const [activeTab, setActiveTab] = useState<'blacklist' | 'fraud_slips' | 'appeals'>('blacklist');
-    const [showAddBlacklistModal, setShowAddBlacklistModal] = useState<boolean>(false);
-    const [selectedCustomerId, setSelectedCustomerId] = useState<string>('');
-    const [blacklistReason, setBlacklistReason] = useState<string>('');
+    const [activeTab, setActiveTab] = useState<'blacklist' | 'fraud_slips' | 'appeals' | 'recommendations'>('blacklist');
 
-    const handleResolveAppeal = (appeal: SupportAppealItem) => {
-        const responseNote = prompt(
-            `Resolution response note for ${appeal.user?.name || 'Customer'}:`,
-            'Appeal approved by Chief Auditor. User restriction lifted.'
-        );
-        if (responseNote !== null) {
-            router.post(route('admin.appeals.resolve', appeal.id), {
-                admin_response: responseNote,
-            });
-        }
-    };
+    // Inspect Case & Evidence Dossier Modal State
+    const [inspectCase, setInspectCase] = useState<RecommendationCaseItem | null>(null);
 
-    const handleAddBlacklist = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!selectedCustomerId) return;
+    // Reusable ConfirmModal State
+    const [confirmModal, setConfirmModal] = useState<{
+        show: boolean;
+        title: string;
+        description?: React.ReactNode;
+        confirmText?: string;
+        cancelText?: string;
+        variant?: 'danger' | 'warning' | 'primary' | 'success';
+        onConfirm: () => void;
+        promptInput?: {
+            label: string;
+            value: string;
+            onChange: (val: string) => void;
+            placeholder?: string;
+            required?: boolean;
+        };
+    }>({
+        show: false,
+        title: '',
+        onConfirm: () => {},
+    });
 
-        router.post(
-            route('admin.blacklist.toggle', selectedCustomerId),
-            {
-                is_blacklisted: true,
-                reason: blacklistReason || 'Flagged for fraudulent payment attempts or tampered receipts.',
+    const pendingRecommendationsCount = recommendations.filter((r) => r.status === 'pending').length;
+
+    // Approve Recommendation under Four-Eyes Governance
+    const handleApproveRecommendation = (rec: RecommendationCaseItem | BlacklistRecommendationItem) => {
+        setConfirmModal({
+            show: true,
+            title: 'Approve & Enforce Fraud Blacklist?',
+            variant: 'danger',
+            confirmText: 'Confirm & Enforce Blacklist',
+            cancelText: 'Cancel',
+            description: (
+                <div className="space-y-2">
+                    <p>
+                        Confirm enforcement of fraud blacklist for <strong className="text-slate-900 dark:text-white">"{rec.customer_name}"</strong> ({rec.customer_phone || 'No phone'}) under Four-Eyes Maker-Checker governance?
+                    </p>
+                    <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 text-xs text-rose-800 dark:text-rose-300">
+                        <strong>Accountant Reason:</strong> {rec.reason}
+                    </div>
+                    <p className="text-[11px] text-slate-500">
+                        This customer and phone number will be immediately restricted from accessing the payment portal.
+                    </p>
+                </div>
+            ),
+            onConfirm: () => {
+                setConfirmModal((prev) => ({ ...prev, show: false }));
+                setInspectCase(null);
+                router.patch(route('admin.blacklist-recommendations.approve', rec.id), {}, { preserveScroll: true });
             },
-            {
-                onSuccess: () => {
-                    setShowAddBlacklistModal(false);
-                    setSelectedCustomerId('');
-                    setBlacklistReason('');
-                },
-            }
-        );
+        });
     };
 
-    const handleRemoveBlacklist = (user: BlacklistedUser | { id: number; name: string }) => {
-        if (confirm(`Remove ${user.name} from the fraud blacklist?`)) {
-            router.post(route('admin.blacklist.toggle', user.id), {
-                is_blacklisted: false,
-            });
-        }
+    // Dismiss Recommendation
+    const handleDismissRecommendation = (rec: RecommendationCaseItem | BlacklistRecommendationItem) => {
+        setConfirmModal({
+            show: true,
+            title: 'Dismiss Blacklist Recommendation?',
+            variant: 'warning',
+            confirmText: 'Dismiss Recommendation',
+            cancelText: 'Keep in Queue',
+            description: (
+                <div className="space-y-2">
+                    <p>
+                        Are you sure you want to dismiss the blacklist recommendation for <strong className="text-slate-900 dark:text-white">"{rec.customer_name}"</strong>?
+                    </p>
+                    <p className="text-[11px] text-slate-500">
+                        The recommendation will be archived as dismissed and no payment restrictions will be placed on this customer.
+                    </p>
+                </div>
+            ),
+            onConfirm: () => {
+                setConfirmModal((prev) => ({ ...prev, show: false }));
+                setInspectCase(null);
+                router.patch(route('admin.blacklist-recommendations.dismiss', rec.id), {}, { preserveScroll: true });
+            },
+        });
+    };
+
+    // Resolve Customer Appeal with Custom Prompt Input
+    const handleResolveAppeal = (appeal: SupportAppealItem) => {
+        const initialNote = 'Appeal approved by Chief Auditor. User restriction lifted.';
+        setConfirmModal({
+            show: true,
+            title: `Resolve Appeal #${appeal.id}?`,
+            variant: 'success',
+            confirmText: 'Resolve & Lift Ban',
+            cancelText: 'Cancel',
+            description: (
+                <p>
+                    Resolving this appeal will unblock <strong className="text-slate-900 dark:text-white">{appeal.user?.name || appeal.contact_phone || 'Customer'}</strong> and restore their account privileges.
+                </p>
+            ),
+            promptInput: {
+                label: 'Resolution Audit Note (Visible to Customer & Audit Trail)',
+                value: initialNote,
+                placeholder: 'Enter resolution note...',
+                required: true,
+                onChange: (val: string) => {
+                    setConfirmModal((prev) => ({
+                        ...prev,
+                        promptInput: prev.promptInput ? { ...prev.promptInput, value: val } : undefined,
+                    }));
+                },
+            },
+            onConfirm: () => {
+                const note = confirmModal.promptInput?.value || initialNote;
+                setConfirmModal((prev) => ({ ...prev, show: false }));
+                router.post(route('admin.appeals.resolve', appeal.id), {
+                    admin_response: note,
+                }, { preserveScroll: true });
+            },
+        });
+    };
+
+    // Unblock / Lift Restriction on Blacklist Registry Entry
+    const handleUnblock = (entry: BlacklistedUser) => {
+        setConfirmModal({
+            show: true,
+            title: 'Unblock Customer / Lift Restriction?',
+            variant: 'success',
+            confirmText: 'Unblock Customer',
+            cancelText: 'Cancel',
+            description: (
+                <div className="space-y-2">
+                    <p>
+                        Are you sure you want to lift fraud restrictions for <strong className="text-slate-900 dark:text-white">{entry.name}</strong> ({entry.phone || 'No phone'})?
+                    </p>
+                    <p className="text-[11px] text-slate-500">
+                        This will remove the entry from the Blacklist Registry, dismiss any pending recommendations, and restore payment submission privileges immediately.
+                    </p>
+                </div>
+            ),
+            onConfirm: () => {
+                setConfirmModal((prev) => ({ ...prev, show: false }));
+                router.delete(route('admin.blacklist.unblock', entry.id), {
+                    preserveScroll: true,
+                });
+            },
+        });
     };
 
     const formatMmk = (amount: number | string | null | undefined) => {
@@ -142,7 +254,7 @@ export default function Blacklist({
             <Head title="Fraud Defense & Blacklist Registry - ReconGuard" />
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full space-y-7">
-                {/* Header & Quick Action */}
+                {/* Header (Cleaned: Manual +Blacklist Customer button removed under strict Four-Eyes governance) */}
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div>
                         <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
@@ -152,29 +264,19 @@ export default function Blacklist({
                             Enforce account restrictions, review suspicious payment slips, and manage compliance appeals
                         </p>
                     </div>
-
-                    <div className="flex items-center gap-3">
-                        <button
-                            type="button"
-                            onClick={() => setShowAddBlacklistModal(true)}
-                            className="inline-flex items-center gap-1.5 rounded-2xl bg-rose-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-rose-700 transition shadow-sm"
-                        >
-                            <span>+</span> Blacklist Customer
-                        </button>
-                    </div>
                 </div>
 
                 {/* KPI Ribbon */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                     <div className="rounded-2xl border border-rose-200/80 dark:border-rose-900/40 bg-white dark:bg-[#161B26] p-5 shadow-sm">
                         <div className="text-xs font-bold uppercase tracking-wider text-rose-500">
                             Blacklisted Customers
                         </div>
                         <div className="text-2xl font-black text-rose-600 dark:text-rose-400 mt-2 font-mono">
-                            {blacklistedUsers.length} <span className="text-xs text-rose-400 font-normal">Accounts</span>
+                            {blacklistedUsers.length} <span className="text-xs text-rose-400 font-normal">Restricted</span>
                         </div>
                         <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                            Blocked from uploading slips
+                            Users & Walk-in Guests blocked
                         </div>
                     </div>
 
@@ -199,6 +301,18 @@ export default function Blacklist({
                         </div>
                         <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
                             Awaiting Chief Auditor review
+                        </div>
+                    </div>
+
+                    <div className="rounded-2xl border border-purple-200/80 dark:border-purple-900/40 bg-white dark:bg-[#161B26] p-5 shadow-sm">
+                        <div className="text-xs font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">
+                            Staff Flag Queue
+                        </div>
+                        <div className="text-2xl font-black text-purple-600 dark:text-purple-400 mt-2 font-mono">
+                            {pendingRecommendationsCount} <span className="text-xs text-purple-500 font-normal">Pending</span>
+                        </div>
+                        <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                            Four-Eyes blacklist requests
                         </div>
                     </div>
                 </div>
@@ -244,30 +358,50 @@ export default function Blacklist({
                             </span>
                         )}
                     </button>
+                    <button
+                        type="button"
+                        onClick={() => setActiveTab('recommendations')}
+                        className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                            activeTab === 'recommendations'
+                                ? 'bg-[#705CF6] text-white shadow-sm'
+                                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/50'
+                        }`}
+                    >
+                        <span>🛡️</span>
+                        Staff Recommendations Queue
+                        {pendingRecommendationsCount > 0 && (
+                            <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-rose-500 text-white font-extrabold animate-pulse">
+                                {pendingRecommendationsCount}
+                            </span>
+                        )}
+                    </button>
                 </div>
 
-                {/* Tab 1: Blacklist Registry */}
+                {/* Tab 1: Unified Blacklist Registry (Registered Users & Walk-in Guests) */}
                 {activeTab === 'blacklist' && (
                     <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-[#161B26] shadow-sm overflow-hidden space-y-0">
                         <div className="p-6 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
                             <div>
                                 <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                                    <span className="text-rose-500">⛔</span> Customer Fraud Blacklist Registry
+                                    <span className="text-rose-500">⛔</span> Customer & Guest Fraud Blacklist Registry
                                 </h3>
                                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                                    Enforced via EnsureNotBlacklisted middleware; blocked customers cannot submit slips
+                                    Enforced via EnsureNotBlacklisted & Public Payment Shield; blocked customers cannot submit payment slips
                                 </p>
                             </div>
+                            <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800">
+                                {blacklistedUsers.length} Active Restrictions
+                            </span>
                         </div>
 
                         <div className="overflow-x-auto">
                             <table className="w-full text-left text-xs divide-y divide-slate-100 dark:divide-slate-800/80">
                                 <thead className="bg-slate-50/80 dark:bg-[#1A202C]/60 text-slate-500 dark:text-slate-400 uppercase tracking-wider font-bold text-[11px]">
                                     <tr>
-                                        <th className="px-6 py-4">Customer Name</th>
-                                        <th className="px-6 py-4">Contact</th>
+                                        <th className="px-6 py-4">Customer Name & Type</th>
+                                        <th className="px-6 py-4">Contact Phone & Email</th>
                                         <th className="px-6 py-4">Blacklist Reason</th>
-                                        <th className="px-6 py-4">Date Added</th>
+                                        <th className="px-6 py-4">Enforced Date & Officer</th>
                                         <th className="px-6 py-4 text-right">Actions</th>
                                     </tr>
                                 </thead>
@@ -275,7 +409,7 @@ export default function Blacklist({
                                     {blacklistedUsers.length === 0 ? (
                                         <tr>
                                             <td colSpan={5} className="px-6 py-8 text-center text-slate-400 font-medium">
-                                                No users are currently on the fraud blacklist.
+                                                No users or guests are currently on the fraud blacklist.
                                             </td>
                                         </tr>
                                     ) : (
@@ -284,28 +418,38 @@ export default function Blacklist({
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <div className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
                                                         <span>{u.name}</span>
+                                                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                                                            u.type === 'Registered'
+                                                                ? 'bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-400'
+                                                                : 'bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400'
+                                                        }`}>
+                                                            {u.type || (u.user_id ? 'Registered' : 'Walk-in Guest')}
+                                                        </span>
                                                         <span className="px-2 py-0.5 rounded-md text-[10px] bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 font-bold">
                                                             BLOCKED
                                                         </span>
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-slate-500 dark:text-slate-400">
-                                                    <div>{u.email}</div>
-                                                    <div className="font-mono text-[11px]">{u.phone || 'N/A'}</div>
+                                                    <div className="font-mono text-slate-800 dark:text-slate-200 font-bold">
+                                                        {u.phone || 'No Phone Recorded'}
+                                                    </div>
+                                                    <div className="text-[11px] text-slate-400">{u.email}</div>
                                                 </td>
                                                 <td className="px-6 py-4 text-rose-600 dark:text-rose-300 font-medium max-w-sm">
                                                     {u.blacklist_reason || 'Administrative restriction'}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-slate-500 dark:text-slate-400">
-                                                    {new Date(u.updated_at).toLocaleDateString()}
+                                                    <div>{new Date(u.created_at || u.updated_at).toLocaleDateString()}</div>
+                                                    <div className="text-[10px] text-slate-400">by {u.blacklisted_by_name || 'Chief Auditor'}</div>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-right">
                                                     <button
                                                         type="button"
-                                                        onClick={() => handleRemoveBlacklist(u)}
-                                                        className="inline-flex items-center px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 transition"
+                                                        onClick={() => handleUnblock(u)}
+                                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 transition shadow-xs"
                                                     >
-                                                        Clear & Unblock
+                                                        <span>🔓</span> Unblock / Lift Restriction
                                                     </button>
                                                 </td>
                                             </tr>
@@ -339,7 +483,7 @@ export default function Blacklist({
                                         <th className="px-6 py-4">Actual Bank Gross</th>
                                         <th className="px-6 py-4 text-right">Variance Prevented</th>
                                         <th className="px-6 py-4">Audit Notes</th>
-                                        <th className="px-6 py-4 text-right">Action</th>
+                                        <th className="px-6 py-4 text-right">Status</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80 text-slate-700 dark:text-slate-300">
@@ -374,24 +518,9 @@ export default function Blacklist({
                                                     {m.notes || '—'}
                                                 </td>
                                                 <td className="px-6 py-4 text-right whitespace-nowrap">
-                                                    {m.invoice?.customer && !m.invoice.customer.is_blacklisted && (
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => {
-                                                                setSelectedCustomerId(String(m.invoice?.customer?.id));
-                                                                setBlacklistReason(`Repeated fraud flag on Match #${m.id}: ${m.notes}`);
-                                                                setShowAddBlacklistModal(true);
-                                                            }}
-                                                            className="inline-flex items-center px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-50 dark:bg-rose-950/80 text-rose-600 dark:text-rose-300 border border-rose-200 dark:border-rose-800 hover:bg-rose-100 transition shadow-sm"
-                                                        >
-                                                            Add to Blacklist
-                                                        </button>
-                                                    )}
-                                                    {m.invoice?.customer && m.invoice.customer.is_blacklisted && (
-                                                        <span className="text-[11px] text-rose-500 font-bold">
-                                                            Already Blacklisted
-                                                        </span>
-                                                    )}
+                                                    <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800">
+                                                        INTERCEPTED
+                                                    </span>
                                                 </td>
                                             </tr>
                                         ))
@@ -442,10 +571,10 @@ export default function Blacklist({
                                             <tr key={appeal.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors">
                                                 <td className="px-6 py-4 align-top whitespace-nowrap">
                                                     <div className="font-bold text-slate-900 dark:text-white">
-                                                        {appeal.user?.name || `Customer #${appeal.user_id}`}
+                                                        {appeal.user?.name || `Customer #${appeal.user_id || 'Guest'}`}
                                                     </div>
-                                                    <div className="text-slate-500 dark:text-slate-400 text-[11px]">{appeal.user?.email || 'N/A'}</div>
-                                                    <div className="font-mono text-slate-400 text-[11px]">{appeal.user?.phone || ''}</div>
+                                                    <div className="text-slate-500 dark:text-slate-400 text-[11px]">{appeal.user?.email || 'Walk-in Guest'}</div>
+                                                    <div className="font-mono text-slate-400 text-[11px]">{appeal.contact_phone || appeal.user?.phone || ''}</div>
                                                 </td>
                                                 <td className="px-6 py-4 align-top max-w-md">
                                                     <div className="font-bold text-slate-900 dark:text-white">{appeal.subject}</div>
@@ -493,80 +622,161 @@ export default function Blacklist({
                         </div>
                     </div>
                 )}
+
+                {/* Tab 4: Staff Recommendations Queue */}
+                {activeTab === 'recommendations' && (
+                    <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-[#161B26] shadow-sm overflow-hidden space-y-0">
+                        <div className="p-6 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+                            <div>
+                                <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                                    <span className="text-purple-500">🛡️</span> Four-Eyes Staff Blacklist Recommendations
+                                </h3>
+                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                                    Submitted by Senior Accountants during reconciliation or invoice review; requires Chief Auditor approval to enforce
+                                </p>
+                            </div>
+                            <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-purple-50 dark:bg-purple-950/60 text-[#705CF6] dark:text-purple-300 border border-purple-200 dark:border-purple-800">
+                                {pendingRecommendationsCount} Awaiting Decision
+                            </span>
+                        </div>
+
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left text-xs divide-y divide-slate-100 dark:divide-slate-800/80">
+                                <thead className="bg-slate-50/80 dark:bg-[#1A202C]/60 text-slate-500 dark:text-slate-400 uppercase tracking-wider font-bold text-[11px]">
+                                    <tr>
+                                        <th className="px-6 py-4">Recommender</th>
+                                        <th className="px-6 py-4">Target Customer & Phone</th>
+                                        <th className="px-6 py-4">Linked Invoice</th>
+                                        <th className="px-6 py-4">Evidence & Reason</th>
+                                        <th className="px-6 py-4">Status</th>
+                                        <th className="px-6 py-4">Submitted Date</th>
+                                        <th className="px-6 py-4 text-right">Four-Eyes Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80 text-slate-700 dark:text-slate-300">
+                                    {recommendations.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={7} className="px-6 py-8 text-center text-slate-400 font-medium">
+                                                No staff blacklist recommendations in queue.
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        recommendations.map((rec) => (
+                                            <tr key={rec.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors">
+                                                <td className="px-6 py-4 align-top whitespace-nowrap">
+                                                    <div className="font-bold text-slate-900 dark:text-white">
+                                                        {rec.recommender?.name || 'Senior Accountant'}
+                                                    </div>
+                                                    <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                                                        {rec.recommender?.email}
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4 align-top whitespace-nowrap">
+                                                    <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                                                        <span>{rec.customer_name}</span>
+                                                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                                                            rec.target_user_id
+                                                                ? 'bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-400'
+                                                                : 'bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400'
+                                                        }`}>
+                                                            {rec.target_user_id ? 'Registered' : 'Walk-in Guest'}
+                                                        </span>
+                                                    </div>
+                                                    <div className="font-mono text-[11px] text-slate-500 dark:text-slate-400">
+                                                        {rec.customer_phone || 'No phone'}
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4 align-top whitespace-nowrap">
+                                                    {rec.invoice ? (
+                                                        <span className="font-mono font-bold text-[#705CF6] dark:text-indigo-400">
+                                                            {rec.invoice.invoice_number}
+                                                        </span>
+                                                    ) : (
+                                                        <span className="text-slate-400 italic">—</span>
+                                                    )}
+                                                </td>
+                                                <td className="px-6 py-4 align-top text-slate-700 dark:text-slate-300 max-w-xs leading-relaxed">
+                                                    {rec.reason}
+                                                </td>
+                                                <td className="px-6 py-4 align-top whitespace-nowrap">
+                                                    {rec.status === 'pending' ? (
+                                                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-50 dark:bg-amber-950/80 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800">
+                                                            ⏳ PENDING
+                                                        </span>
+                                                    ) : rec.status === 'approved' ? (
+                                                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-50 dark:bg-rose-950/80 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800">
+                                                            ⛔ ENFORCED
+                                                        </span>
+                                                    ) : (
+                                                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-300 dark:border-slate-700">
+                                                            ✕ DISMISSED
+                                                        </span>
+                                                    )}
+                                                </td>
+                                                <td className="px-6 py-4 align-top whitespace-nowrap text-slate-500 dark:text-slate-400">
+                                                    {new Date(rec.created_at).toLocaleDateString()}
+                                                </td>
+                                                <td className="px-6 py-4 align-top text-right whitespace-nowrap">
+                                                    <div className="flex items-center justify-end gap-2">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setInspectCase(rec)}
+                                                            className="px-2.5 py-1 rounded-xl text-xs font-bold bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/70 dark:hover:bg-purple-900/80 text-[#705CF6] dark:text-purple-300 border border-purple-200 dark:border-purple-800 transition shadow-xs flex items-center gap-1"
+                                                        >
+                                                            <span>🔍</span> Inspect Case
+                                                        </button>
+
+                                                        {rec.status === 'pending' && (
+                                                            <>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => handleDismissRecommendation(rec)}
+                                                                    className="px-2.5 py-1 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition"
+                                                                >
+                                                                    Dismiss
+                                                                </button>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => handleApproveRecommendation(rec)}
+                                                                    className="px-2.5 py-1 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white transition shadow-sm"
+                                                                >
+                                                                    Approve & Enforce
+                                                                </button>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                )}
             </div>
 
-            {/* Add to Blacklist Modal */}
-            {showAddBlacklistModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
-                    <form
-                        onSubmit={handleAddBlacklist}
-                        className="w-full max-w-md rounded-3xl border border-slate-200 dark:border-red-800/60 bg-white dark:bg-[#161B26] p-6 shadow-2xl space-y-4"
-                    >
-                        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-                            <h4 className="text-sm font-bold text-rose-600 dark:text-red-400 flex items-center gap-1.5">
-                                <span>⛔</span> Add Customer to Fraud Blacklist
-                            </h4>
-                            <button
-                                type="button"
-                                onClick={() => setShowAddBlacklistModal(false)}
-                                className="text-slate-400 hover:text-slate-900 dark:hover:text-white"
-                            >
-                                ✕
-                            </button>
-                        </div>
+            {/* Inspect Case & Evidence Dossier Modal */}
+            <InspectCaseModal
+                show={!!inspectCase}
+                recommendation={inspectCase}
+                onClose={() => setInspectCase(null)}
+                onApprove={handleApproveRecommendation}
+                onDismiss={handleDismissRecommendation}
+            />
 
-                        <div>
-                            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                                Select Customer
-                            </label>
-                            <select
-                                required
-                                value={selectedCustomerId}
-                                onChange={(e) => setSelectedCustomerId(e.target.value)}
-                                className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 p-2.5 text-xs text-slate-900 dark:text-white focus:border-rose-500 focus:ring-1 focus:ring-rose-500"
-                            >
-                                <option value="">-- Select Customer Account --</option>
-                                {customers.map((c) => (
-                                    <option key={c.id} value={c.id} disabled={c.is_blacklisted}>
-                                        {c.name} ({c.email}) {c.is_blacklisted ? '[Already Blacklisted]' : ''}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
-                        <div>
-                            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                                Blacklist Audit Reason
-                            </label>
-                            <textarea
-                                rows={3}
-                                required
-                                placeholder="e.g. Uploaded Photoshopped payment receipts or duplicate transaction IDs."
-                                value={blacklistReason}
-                                onChange={(e) => setBlacklistReason(e.target.value)}
-                                className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 p-3 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:border-rose-500 focus:ring-1 focus:ring-rose-500"
-                            />
-                        </div>
-
-                        <div className="flex justify-end gap-2 pt-2">
-                            <button
-                                type="button"
-                                onClick={() => setShowAddBlacklistModal(false)}
-                                className="rounded-xl border border-slate-200 dark:border-slate-700 px-3.5 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                type="submit"
-                                disabled={!selectedCustomerId || !blacklistReason.trim()}
-                                className="rounded-xl bg-rose-600 px-4 py-2 text-xs font-bold text-white hover:bg-rose-700 transition disabled:opacity-50 shadow-sm"
-                            >
-                                Confirm Blacklist
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            )}
+            {/* Global FinSet ConfirmModal (Replaces native browser window.confirm & prompt) */}
+            <ConfirmModal
+                show={confirmModal.show}
+                title={confirmModal.title}
+                description={confirmModal.description}
+                confirmText={confirmModal.confirmText}
+                cancelText={confirmModal.cancelText}
+                variant={confirmModal.variant}
+                promptInput={confirmModal.promptInput}
+                onClose={() => setConfirmModal((prev) => ({ ...prev, show: false }))}
+                onConfirm={confirmModal.onConfirm}
+            />
         </AuthenticatedLayout>
     );
 }
