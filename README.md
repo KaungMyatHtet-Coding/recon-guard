@@ -108,16 +108,6 @@ In fast-growing emerging markets like Myanmar and Southeast Asia, digital mercha
 
 ---
 
-## 🔑 Demonstration Accounts
-
-All demo accounts and sample banking transactions are pre-seeded:
-
-| Role | Email | Password | Secondary Gate PIN | Access Permissions |
-| :--- | :--- | :--- | :--- | :--- |
-| **Chief Auditor (Admin)** | `admin@reconguard.test` | `password` | `admin1234` | Full System, Governance Suite, Blacklist, Appeals, PDF Audit Report |
-| **Senior Accountant** | `accountant@reconguard.test` | `password` | `N/A` | Statements Ingestion, 3-Way Reconciliation Workbench, Audit Reports |
-| **Merchant Customer** | `customer@reconguard.test` | `password` | `N/A` | Customer Portal, Submit Slips, OCR Preview, Compliance Appeals |
-
 ---
 
 ## 💻 Local Setup & Development
@@ -157,28 +147,6 @@ php artisan serve
 
 ---
 
-## 🧪 Comprehensive Automated Test Suite
-
-ReconGuard features an end-to-end automated test suite covering all phases, including authentication, multi-bank statement ingestion, OCR heuristics, Levenshtein fuzzy matching, and auditor governance.
-
-```bash
-# Run all tests
-php artisan test
-```
-
-```
-   PASS  Tests\Feature\AdminGovernanceAndAuditTest (12 tests)
-   PASS  Tests\Feature\BankStatementIngestionTest (11 tests)
-   PASS  Tests\Feature\DashboardTest (3 tests)
-   PASS  Tests\Feature\InvoicePaymentSlipTest (8 tests)
-   PASS  Tests\Feature\ReconciliationEngineTest (8 tests)
-   PASS  Tests\Feature\SimulationStudioTest (7 tests)
-   PASS  Tests\Feature\Auth\AuthenticationTest (4 tests)
-   ...
-
-   Tests:    74 passed (356 assertions)
-   Duration: ~7.5 seconds
-```
 
 ---
 
